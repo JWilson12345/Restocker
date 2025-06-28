@@ -1,0 +1,401 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vending Machine Restock</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.22.5/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .slide-down {
+      animation: slideDown 0.5s ease-out forwards;
+    }
+    @keyframes slideDown {
+      from { transform: translateY(0); }
+      to { transform: translateY(calc(100% + 12px)); } /* Move to bottom of list with spacing */
+    }
+    .fade-down {
+      animation: fadeDown 0.5s ease-out forwards;
+    }
+    @keyframes fadeDown {
+      from {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      to {
+        opacity: 0;
+        transform: translateY(20px); /* Slight downward movement */
+      }
+    }
+    .slide-up {
+      animation: slideUp 0.5s ease-out forwards;
+    }
+    @keyframes slideUp {
+      from {
+        transform: translateY(0);
+      }
+      to {
+        transform: translateY(-100%); /* Move up to fill the gap */
+      }
+    }
+    .fade-out {
+      animation: fadeOut 0.3s ease-out forwards;
+    }
+    @keyframes fadeOut {
+      from {
+        opacity: 1;
+      }
+      to {
+        opacity: 0;
+      }
+    }
+    .scale-transition {
+      transition: transform 0.2s ease;
+    }
+    .scale-transition:hover {
+      transform: scale(1.1);
+    }
+    body {
+      background: linear-gradient(135deg, #1a202c, #2d3748); /* Deep blue-gray to dark gray gradient */
+      min-height: 100vh;
+    }
+    .restock-container {
+      min-height: 60vh; /* Ensure container takes enough height */
+      overflow-y: auto; /* Allow scrolling if needed */
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const products = [
+      "Coke gray", "Coke red", "Coke redder", "Fanta blue", "Fanta red",
+      "Fanta orange", "Fanta yellow", "Viminto purple", "Dr Pepper", "Pepsi black",
+      "Lemmon green", "Dog brown", "D&b purple", "Tango colour", "Tango purple",
+      "Tango green", "Tango orange", "Iron bru", "Water"
+    ];
+
+    const App = () => {
+      const [restockList, setRestockList] = React.useState(() => {
+        const saved = localStorage.getItem('restockList');
+        return saved ? JSON.parse(saved) : [];
+      });
+      const [showPopup, setShowPopup] = React.useState(false);
+      const [currentProduct, setCurrentProduct] = React.useState(null);
+      const [quantity, setQuantity] = React.useState(1);
+      const [showResetConfirm, setShowResetConfirm] = React.useState(false);
+      const [showRestockList, setShowRestockList] = React.useState(false);
+      const [showCollectPopup, setShowCollectPopup] = React.useState(null);
+      const [fadingItemIndex, setFadingItemIndex] = React.useState(null); // Track item being faded
+      const [slidingItems, setSlidingItems] = React.useState([]); // Track items sliding up
+      const [isClosingPopup, setIsClosingPopup] = React.useState(false); // Track popup closing animation
+      const [isClosingCollectPopup, setIsClosingCollectPopup] = React.useState(false); // Track collect popup closing animation
+      const [isClosingResetPopup, setIsClosingResetPopup] = React.useState(false); // Track reset popup closing animation
+
+      React.useEffect(() => {
+        localStorage.setItem('restockList', JSON.stringify(restockList));
+      }, [restockList]);
+
+      const addToRestock = () => {
+        const existingItem = restockList.find(item => item.product === currentProduct && !item.collected);
+        if (existingItem) {
+          // Merge by updating quantity
+          const updatedList = restockList.map(item =>
+            item.product === currentProduct && !item.collected
+              ? { ...item, quantity: item.quantity + quantity }
+              : item
+          );
+          setRestockList(updatedList);
+        } else {
+          // Add new item
+          setRestockList([...restockList, { product: currentProduct, quantity, collected: false }]);
+        }
+        setIsClosingPopup(true);
+        setTimeout(() => {
+          setShowPopup(false);
+          setIsClosingPopup(false);
+          setQuantity(1);
+        }, 300); // Match fade-out animation duration
+      };
+
+      const confirmCollected = (index) => {
+        setFadingItemIndex(index); // Start fading the specific item
+        // Determine items to slide up (those below the removed item)
+        const itemsToSlide = restockList.filter((item, i) => i > index && !item.collected).map((_, i) => index + i + 1);
+        setSlidingItems(itemsToSlide);
+        setTimeout(() => {
+          const updatedList = [...restockList];
+          updatedList[index].collected = true;
+          setRestockList(updatedList.filter(item => !item.collected)); // Keep only uncollected
+          setFadingItemIndex(null); // Reset after removal
+          setSlidingItems([]); // Reset sliding items
+        }, 500); // Match animation duration
+        setIsClosingCollectPopup(true);
+        setTimeout(() => {
+          setShowCollectPopup(null);
+          setIsClosingCollectPopup(false);
+        }, 300); // Match fade-out animation duration
+      };
+
+      const resetList = () => {
+        setRestockList([]);
+        setIsClosingResetPopup(true);
+        setTimeout(() => {
+          setShowResetConfirm(false);
+          setIsClosingResetPopup(false);
+        }, 300); // Match fade-out animation duration
+      };
+
+      return (
+        <div className="min-h-screen p-4">
+          <div className="max-w-md mx-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-2xl font-bold text-white">Vending Machine Restock</h1>
+            </div>
+
+            <div className="flex justify-between mb-6">
+              <button
+                onClick={() => setShowRestockList(false)}
+                className={`flex-1 py-2 mr-2 rounded-lg font-semibold bg-gray-700 text-white shadow-md hover:bg-gray-600 ${
+                  !showRestockList ? 'bg-blue-800' : ''
+                }`}
+              >
+                Add Products
+              </button>
+              <button
+                onClick={() => setShowRestockList(true)}
+                className={`flex-1 py-2 rounded-lg font-semibold bg-gray-700 text-white shadow-md hover:bg-gray-600 ${
+                  showRestockList ? 'bg-blue-800' : ''
+                }`}
+              >
+                Restock List
+              </button>
+            </div>
+
+            {showRestockList ? (
+              <div className="restock-container">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-semibold text-white">Restock List</h2>
+                  <button
+                    onClick={() => setShowResetConfirm(true)}
+                    className="px-4 py-2 bg-red-700 text-white rounded-lg shadow-md hover:bg-red-600"
+                  >
+                    Reset List
+                  </button>
+                </div>
+                {restockList.length === 0 ? (
+                  <p className="text-center text-gray-200">No items in restock list.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {restockList.filter(item => !item.collected).map((item, index) => (
+                      <div
+                        key={index}
+                        className={`flex items-center justify-between p-3 rounded-lg bg-gray-800 restock-item shadow-md ${
+                          fadingItemIndex === index ? 'fade-down' : slidingItems.includes(index) ? 'slide-up' : ''
+                        }`}
+                      >
+                        <div className="flex items-center">
+                          <img
+                            src={`images/${item.product.replace(/ /g, '_')}.png`}
+                            alt={item.product}
+                            className="w-24 h-24 mr-4 object-contain"
+                            onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }}
+                          />
+                          <span className="ml-4 text-lg text-white">{item.product} (x{item.quantity})</span>
+                        </div>
+                        <button
+                          onClick={() => setShowCollectPopup(restockList.findIndex(i => i.product === item.product && i.quantity === item.quantity && !i.collected))}
+                          className="px-4 py-2 bg-blue-700 text-white rounded-lg shadow-md hover:bg-blue-600"
+                        >
+                          View
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="grid gap-3">
+                {products.map((product) => (
+                  <div
+                    key={product}
+                    className="flex items-center p-3 bg-gray-800 rounded-lg shadow-lg hover:bg-gray-700"
+                    onClick={() => {
+                      setCurrentProduct(product);
+                      setShowPopup(true);
+                    }}
+                  >
+                    <img
+                      src={`images/${product.replace(/ /g, '_')}.png`}
+                      alt={product}
+                      className="w-24 h-24 mr-6 object-contain"
+                      onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }}
+                    />
+                    <span className="text-lg font-medium text-white">{product}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {showPopup && (
+              <div className={`fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center ${isClosingPopup ? 'fade-out' : ''}`}>
+                <div className="bg-gray-800 p-6 rounded-lg w-11/12 max-w-sm shadow-lg">
+                  <div className="flex items-center mb-4">
+                    <img
+                      src={`images/${currentProduct.replace(/ /g, '_')}.png`}
+                      alt={currentProduct}
+                      className="w-24 h-24 mr-4 object-contain"
+                      onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }}
+                    />
+                    <h2 className="text-lg font-semibold text-white">{currentProduct}</h2>
+                  </div>
+                  <div className="flex items-center mb-4">
+                    <button
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      className="px-4 py-2 bg-gray-600 text-white rounded-lg scale-transition shadow-md"
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      value={quantity}
+                      onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="mx-4 w-16 text-center border rounded-lg bg-gray-700 text-white"
+                    />
+                    <button
+                      onClick={() => setQuantity(quantity + 1)}
+                      className="px-4 py-2 bg-gray-600 text-white rounded-lg scale-transition shadow-md"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <button
+                      onClick={() => {
+                        setIsClosingPopup(true);
+                        setTimeout(() => {
+                          setShowPopup(false);
+                          setIsClosingPopup(false);
+                          setQuantity(1);
+                        }, 300); // Match fade-out animation duration
+                      }}
+                      className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400 shadow-md"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={addToRestock}
+                      className="px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-600 shadow-md"
+                    >
+                      Confirm
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showResetConfirm && (
+              <div className={`fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center ${isClosingResetPopup ? 'fade-out' : ''}`}>
+                <div className="bg-gray-800 p-6 rounded-lg w-11/12 max-w-sm shadow-lg">
+                  <p className="mb-4 text-gray-200">Are you sure you want to reset the restock list?</p>
+                  <div className="flex justify-end space-x-2">
+                    <button
+                      onClick={() => {
+                        setIsClosingResetPopup(true);
+                        setTimeout(() => {
+                          setShowResetConfirm(false);
+                          setIsClosingResetPopup(false);
+                        }, 300); // Match fade-out animation duration
+                      }}
+                      className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400 shadow-md"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={resetList}
+                      className="px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-600 shadow-md"
+                    >
+                      Reset
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showCollectPopup !== null && (
+              <div className={`fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center ${isClosingCollectPopup ? 'fade-out' : ''}`}>
+                <div className="bg-gray-800 p-6 rounded-lg w-11/12 max-w-sm shadow-lg">
+                  <p className="mb-4 text-gray-200">Mark {restockList[showCollectPopup].product} (x{restockList[showCollectPopup].quantity}) as collected?</p>
+                  <div className="flex justify-end space-x-2">
+                    <button
+                      onClick={() => {
+                        setIsClosingCollectPopup(true);
+                        setTimeout(() => {
+                          setShowCollectPopup(null);
+                          setIsClosingCollectPopup(false);
+                        }, 300); // Match fade-out animation duration
+                      }}
+                      className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400 shadow-md"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => confirmCollected(showCollectPopup)}
+                      className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md"
+                    >
+                      Confirm
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
