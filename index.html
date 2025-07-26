@@ -10,13 +10,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
-    .slide-down {
-      animation: slideDown 0.5s ease-out forwards;
-    }
-    @keyframes slideDown {
-      from { transform: translateY(0); }
-      to { transform: translateY(calc(100% + 12px)); }
-    }
     .fade-down {
       animation: fadeDown 0.5s ease-out forwards;
     }
@@ -70,88 +63,81 @@
     .light {
       background: #a8a8a8; /* gray-100 */
     }
-    .restock-container {
-      min-height: 60vh;
+    .content {
+      min-height: calc(100vh + 10rem); /* Ensure scrollable beyond viewport */
       overflow-y: auto;
-    }
-    .fixed-buttons {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      padding-top: 0.5rem;
-      padding-bottom: 0.5rem;
     }
     .grid-view {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-      gap: 0.75rem; /* gap-3 */
+      gap: 0.75rem;
     }
     .grid-view > div {
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
-      padding: 1rem; /* p-4 */
-      border-radius: 0.5rem; /* rounded-lg */
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); /* shadow-lg */
+      padding: 1rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
     .dark .grid-view > div {
-      background-color: #2d3748; /* bg-gray-800 */
+      background-color: #2d3748;
     }
     .light .grid-view > div {
-      background-color: #efefef; /* bg-gray-200 */
+      background-color: #efefef;
     }
     .dark .grid-view > div:hover {
-      background-color: #4a5568; /* hover:bg-gray-700 */
+      background-color: #4a5568;
     }
     .light .grid-view > div:hover {
-      background-color: #dadada; /* hover:bg-gray-300 */
+      background-color: #dadada;
     }
     .grid-view img {
-      width: 20vw; /* Dynamic size */
+      width: 20vw;
       height: 20vw;
       max-width: 5rem;
       max-height: 5rem;
       object-fit: contain;
     }
     .grid-view span {
-      font-size: clamp(0.75rem, 3vw, 0.875rem); /* text-sm */
-      margin-top: 0.5rem; /* mt-2 */
+      font-size: clamp(0.75rem, 3vw, 0.875rem);
+      margin-top: 0.5rem;
     }
     .dark .grid-view span {
-      color: #ffffff; /* text-white */
+      color: #ffffff;
     }
     .light .grid-view span {
-      color: #111827; /* text-gray-900 */
+      color: #111827;
     }
     .restock-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-      gap: 0.75rem; /* gap-3 */
+      gap: 0.75rem;
     }
     .restock-grid > div {
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
-      padding: 1rem; /* p-4 */
-      padding-bottom: 2.5rem; /* pb-10 */
-      border-radius: 0.5rem; /* rounded-lg */
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); /* shadow-lg */
-      min-height: 10rem; /* min-h-40 */
-      transition: transform 0.5s ease-out; /* slide-grid */
+      padding: 1rem;
+      padding-bottom: 2.5rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      min-height: 10rem;
+      transition: transform 0.5s ease-out;
     }
     .dark .restock-grid > div {
-      background-color: #2d3748; /* bg-gray-800 */
+      background-color: #2d3748;
     }
     .light .restock-grid > div {
-      background-color: #e5e7eb; /* bg-gray-200 */
+      background-color: #e5e7eb;
     }
     .dark .restock-grid > div:hover {
-      background-color: #4a5568; /* hover:bg-gray-700 */
+      background-color: #4a5568;
     }
     .light .restock-grid > div:hover {
-      background-color: #d1d5db; /* hover:bg-gray-300 */
+      background-color: #d1d5db;
     }
     .restock-grid img {
       width: 20vw;
@@ -161,50 +147,78 @@
       object-fit: contain;
     }
     .restock-grid span {
-      font-size: clamp(0.75rem, 3vw, 0.875rem); /* text-sm */
-      margin-top: 0.5rem; /* mt-2 */
+      font-size: clamp(0.75rem, 3vw, 0.875rem);
+      margin-top: 0.5rem;
     }
     .dark .restock-grid span {
-      color: #ffffff; /* text-white */
+      color: #ffffff;
     }
     .light .restock-grid span {
-      color: #111827; /* text-gray-900 */
+      color: #111827;
     }
     .restock-grid button {
-      margin-top: 0.5rem; /* mt-2 */
-      font-size: clamp(0.75rem, 3vw, 0.875rem); /* text-sm */
+      margin-top: 0.5rem;
+      font-size: clamp(0.75rem, 3vw, 0.875rem);
     }
     .toast {
       position: fixed;
-      top: 1rem; /* Changed to top for mobile */
+      bottom: 4rem; /* Above footer */
       left: 50%;
       transform: translateX(-50%);
-      padding: 1rem; /* p-4 */
-      border-radius: 0.5rem; /* rounded-lg */
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); /* shadow-lg */
+      padding: 1rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
       z-index: 50;
       max-width: 90vw;
     }
     .dark .toast {
-      background-color: #2d3748; /* bg-gray-800 */
-      color: #ffffff; /* text-white */
+      background-color: #2d3748;
+      color: #ffffff;
     }
     .light .toast {
-      background-color: #e5e7eb; /* bg-gray-200 */
-      color: #111827; /* text-gray-900 */
+      background-color: #e5e7eb;
+      color: #111827;
     }
     .search-container {
       position: relative;
       display: flex;
       align-items: center;
       width: 100%;
+      margin: 1rem 0;
     }
     .search-clear {
       position: absolute;
-      right: 3rem; /* Position before ? button */
+      right: 3rem;
     }
     .search-info {
-      margin-left: 0.5rem;
+      position: absolute;
+      right: 0;
+    }
+    .footer {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background-color: transparent;
+      min-height: 3rem;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .footer.visible {
+      opacity: 1;
+    }
+    .changelog-list {
+      padding-left: 1.5rem;
+    }
+    .changelog-list > li {
+      margin-bottom: 0.5rem;
+    }
+    .changelog-list .added {
+      color: #10b981; /* Emerald green */
+      list-style-type: "➕ ";
+    }
+    .changelog-list .removed {
+      color: #ef4444; /* Red */
+      list-style-type: "➖ ";
     }
   </style>
 </head>
@@ -235,6 +249,7 @@
       const [showCollectInfoPopup, setShowCollectInfoPopup] = React.useState(false);
       const [showResetInfoPopup, setShowResetInfoPopup] = React.useState(false);
       const [showSearchInfoPopup, setShowSearchInfoPopup] = React.useState(false);
+      const [showChangelogPopup, setShowChangelogPopup] = React.useState(false);
       const [fadingItemIndex, setFadingItemIndex] = React.useState(null);
       const [slidingItems, setSlidingItems] = React.useState([]);
       const [isClosingPopup, setIsClosingPopup] = React.useState(false);
@@ -246,6 +261,7 @@
       const [isClosingCollectInfoPopup, setIsClosingCollectInfoPopup] = React.useState(false);
       const [isClosingResetInfoPopup, setIsClosingResetInfoPopup] = React.useState(false);
       const [isClosingSearchInfoPopup, setIsClosingSearchInfoPopup] = React.useState(false);
+      const [isClosingChangelogPopup, setIsClosingChangelogPopup] = React.useState(false);
       const [isGridView, setIsGridView] = React.useState(false);
       const [isDarkMode, setIsDarkMode] = React.useState(() => {
         const saved = localStorage.getItem('isDarkMode');
@@ -254,6 +270,7 @@
       const [searchQuery, setSearchQuery] = React.useState('');
       const [showToast, setShowToast] = React.useState(false);
       const [lastAction, setLastAction] = React.useState(null);
+      const contentRef = React.useRef(null);
 
       React.useEffect(() => {
         localStorage.setItem('restockList', JSON.stringify(restockList));
@@ -273,6 +290,19 @@
           return () => clearTimeout(timer);
         }
       }, [showToast]);
+
+      React.useEffect(() => {
+        const handleScroll = () => {
+          const footer = document.querySelector('.footer');
+          if (window.scrollY > 100) {
+            footer.classList.add('visible');
+          } else {
+            footer.classList.remove('visible');
+          }
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+      }, []);
 
       const addToRestock = () => {
         const existingItem = restockList.find(item => item.product === currentProduct && !item.collected);
@@ -415,6 +445,18 @@
         }
       };
 
+      const toggleChangelogPopup = () => {
+        if (showChangelogPopup) {
+          setIsClosingChangelogPopup(true);
+          setTimeout(() => {
+            setShowChangelogPopup(false);
+            setIsClosingChangelogPopup(false);
+          }, 300);
+        } else {
+          setShowChangelogPopup(true);
+        }
+      };
+
       const toggleView = () => {
         setIsGridView(!isGridView);
       };
@@ -430,514 +472,572 @@
       const totalItems = restockList.reduce((sum, item) => sum + item.quantity, 0);
 
       return (
-        <div className="min-h-screen p-4">
-          <div className="w-full max-w-[90vw] mx-auto">
-            <div className="fixed-buttons">
-              <div className="flex items-center mb-4">
-                <h1 className={`text-[clamp(1.5rem,5vw,2rem)] font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Vending Machine Restock</h1>
-                <div className="flex ml-auto space-x-2">
-                  <button
-                    onClick={toggleInfoPopup}
-                    className="w-11 h-11 rounded-full bg-green-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-green-600 scale-transition"
-                    aria-label="Info"
-                  >
-                    ?
-                  </button>
-                  <button
-                    onClick={toggleView}
-                    className="w-11 h-11 rounded-full bg-blue-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-blue-600 scale-transition"
-                    aria-label="Toggle view"
-                  >
-                    <i className={`fas ${isGridView ? 'fa-bars' : 'fa-th'}`}></i>
-                  </button>
-                  <button
-                    onClick={toggleTheme}
-                    className="w-11 h-11 rounded-full bg-blue-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-blue-600 scale-transition"
-                    aria-label="Toggle theme"
-                  >
-                    <i className={`fas ${isDarkMode ? 'fa-moon' : 'fa-sun'}`}></i>
-                  </button>
-                </div>
-              </div>
-              <div className="flex justify-between mb-4 gap-2">
+        <div className="min-h-screen p-4 relative" ref={contentRef}>
+          <header className="w-full max-w-[90vw] mx-auto mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h1 className={`text-[clamp(1.5rem,5vw,2rem)] font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Vending Machine Restock</h1>
+              <div className="flex space-x-2">
                 <button
-                  onClick={() => setShowRestockList(false)}
-                  className={`flex-1 py-2 rounded-lg font-semibold text-white shadow-md hover:bg-gray-600 ${
-                    isDarkMode ? 'bg-gray-700' : 'bg-gray-400'
-                  } ${!showRestockList ? isDarkMode ? 'bg-blue-700' : 'bg-blue-600' : ''}`}
+                  onClick={toggleInfoPopup}
+                  className="w-10 h-10 rounded-full bg-green-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-green-600 scale-transition"
+                  aria-label="Info"
                 >
-                  Add Products
+                  ?
                 </button>
                 <button
-                  onClick={() => setShowRestockList(true)}
-                  className={`flex-1 py-2 rounded-lg font-semibold text-white shadow-md hover:bg-gray-600 ${
-                    isDarkMode ? 'bg-gray-700' : 'bg-gray-400'
-                  } ${showRestockList ? isDarkMode ? 'bg-blue-700' : 'bg-blue-600' : ''}`}
+                  onClick={toggleView}
+                  className="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-blue-600 scale-transition"
+                  aria-label="Toggle view"
                 >
-                  Restock List
+                  <i className={`fas ${isGridView ? 'fa-bars' : 'fa-th'}`}></i>
+                </button>
+                <button
+                  onClick={toggleTheme}
+                  className="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-blue-600 scale-transition"
+                  aria-label="Toggle theme"
+                >
+                  <i className={`fas ${isDarkMode ? 'fa-moon' : 'fa-sun'}`}></i>
                 </button>
               </div>
             </div>
+            <div className="flex justify-between mb-4 gap-2">
+              <button
+                onClick={() => setShowRestockList(false)}
+                className={`flex-1 py-2 rounded-lg font-semibold text-white shadow-md hover:bg-gray-600 ${
+                  !showRestockList ? (isDarkMode ? 'bg-blue-700' : 'bg-blue-600') : (isDarkMode ? 'bg-gray-700' : 'bg-gray-400')
+                }`}
+              >
+                Add Products
+              </button>
+              <button
+                onClick={() => setShowRestockList(true)}
+                className={`flex-1 py-2 rounded-lg font-semibold text-white shadow-md hover:bg-gray-600 ${
+                  showRestockList ? (isDarkMode ? 'bg-blue-700' : 'bg-blue-600') : (isDarkMode ? 'bg-gray-700' : 'bg-gray-400')
+                }`}
+              >
+                Restock List
+              </button>
+            </div>
+          </header>
 
-            {showRestockList ? (
-              <div className="restock-container pt-20">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center">
-                    <h2 className={`text-[clamp(1.25rem,4vw,1.5rem)] font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Restock List</h2>
+          <main className="content">
+            <div className="w-full max-w-[90vw] mx-auto">
+              {showRestockList ? (
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="flex items-center">
+                      <h2 className={`text-[clamp(1.25rem,4vw,1.5rem)] font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Restock List</h2>
+                      <button
+                        onClick={toggleRestockInfoPopup}
+                        className="ml-3 w-10 h-10 rounded-full bg-green-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-green-600 scale-transition"
+                        aria-label="Restock info"
+                      >
+                        ?
+                      </button>
+                    </div>
                     <button
-                      onClick={toggleRestockInfoPopup}
-                      className="ml-3 w-11 h-11 rounded-full bg-green-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-green-600 scale-transition"
-                      aria-label="Restock info"
+                      onClick={() => setShowResetConfirm(true)}
+                      className="px-4 py-2 bg-red-700 text-white rounded-lg shadow-md hover:bg-red-600 text-[clamp(0.875rem,3vw,1rem)]"
                     >
-                      ?
+                      Reset List
                     </button>
                   </div>
-                  <button
-                    onClick={() => setShowResetConfirm(true)}
-                    className="px-4 py-2 bg-red-700 text-white rounded-lg shadow-md hover:bg-red-600 text-[clamp(0.875rem,3vw,1rem)]"
-                  >
-                    Reset List
-                  </button>
-                </div>
-                <p className={`text-[clamp(1rem,4vw,1.125rem)] font-semibold mb-4 ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                  Total Items: {totalItems}
-                </p>
-                {restockList.length === 0 ? (
-                  <p className={`text-center ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>No items in restock list.</p>
-                ) : (
-                  <div className={isGridView ? 'restock-grid' : 'space-y-3'}>
-                    {restockList.filter(item => !item.collected).map((item, index) => (
-                      <div
-                        key={index}
-                        className={`flex ${isGridView ? 'slide-grid' : 'items-center justify-between p-3 rounded-lg restock-item shadow-md'} ${
-                          fadingItemIndex === index ? 'fade-down' : isGridView ? '' : slidingItems.includes(index) ? 'slide-up' : ''
-                        } ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
-                      >
-                        <div className={isGridView ? '' : 'flex items-center'}>
-                          <img
-                            src={`images/${item.product.replace(/ /g, '_')}.png`}
-                            alt={item.product}
-                            className={isGridView ? '' : 'w-[20vw] h-[20vw] max-w-24 max-h-24 mr-4 object-contain'}
-                            onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }}
-                          />
-                          <span className={isGridView ? '' : `ml-4 text-[clamp(1rem,4vw,1.125rem)] ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            {item.product} (x{item.quantity})
-                          </span>
+                  <p className={`text-[clamp(1rem,4vw,1.125rem)] font-semibold mb-4 ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                    Total Items: {totalItems}
+                  </p>
+                  {restockList.length === 0 ? (
+                    <p className={`text-center ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>No items in restock list.</p>
+                  ) : (
+                    <div className={isGridView ? 'restock-grid' : 'space-y-3'}>
+                      {restockList.filter(item => !item.collected).map((item, index) => (
+                        <div
+                          key={index}
+                          className={`flex ${isGridView ? 'slide-grid' : 'items-center justify-between p-3 rounded-lg restock-item shadow-md'} ${
+                            fadingItemIndex === index ? 'fade-down' : isGridView ? '' : slidingItems.includes(index) ? 'slide-up' : ''
+                          } ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
+                        >
+                          <div className={isGridView ? '' : 'flex items-center'}>
+                            <img
+                              src={`images/${item.product.replace(/ /g, '_')}.png`}
+                              alt={item.product}
+                              className={isGridView ? '' : 'w-[20vw] h-[20vw] max-w-24 max-h-24 mr-4 object-contain'}
+                              onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }}
+                            />
+                            <span className={isGridView ? '' : `ml-4 text-[clamp(1rem,4vw,1.125rem)] ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                              {item.product} (x{item.quantity})
+                            </span>
+                          </div>
+                          {!isGridView && (
+                            <button
+                              onClick={() => setShowCollectPopup(restockList.findIndex(i => i.product === item.product && i.quantity === item.quantity && !i.collected))}
+                              className="px-4 py-2 bg-blue-700 text-white rounded-lg shadow-md hover:bg-blue-600 text-[clamp(0.875rem,3vw,1rem)]"
+                            >
+                              View
+                            </button>
+                          )}
+                          {isGridView && (
+                            <button
+                              onClick={() => setShowCollectPopup(restockList.findIndex(i => i.product === item.product && i.quantity === item.quantity && !i.collected))}
+                              className="mt-2 px-3 py-1.5 bg-blue-700 text-white rounded-lg shadow-md hover:bg-blue-600 text-[clamp(0.75rem,3vw,0.875rem)]"
+                            >
+                              View
+                            </button>
+                          )}
                         </div>
-                        {!isGridView && (
-                          <button
-                            onClick={() => setShowCollectPopup(restockList.findIndex(i => i.product === item.product && i.quantity === item.quantity && !i.collected))}
-                            className="px-4 py-2 bg-blue-700 text-white rounded-lg shadow-md hover:bg-blue-600 text-[clamp(0.875rem,3vw,1rem)]"
-                          >
-                            View
-                          </button>
-                        )}
-                        {isGridView && (
-                          <button
-                            onClick={() => setShowCollectPopup(restockList.findIndex(i => i.product === item.product && i.quantity === item.quantity && !i.collected))}
-                            className="mt-2 px-3 py-1.5 bg-blue-700 text-white rounded-lg shadow-md hover:bg-blue-600 text-[clamp(0.75rem,3vw,0.875rem)]"
-                          >
-                            View
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="pt-20">
-                <div className="search-container mb-4">
-                  <input
-                    type="text"
-                    placeholder="Search products..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className={`w-full p-2 border rounded-lg ${isDarkMode ? 'bg-gray-700 text-white placeholder-gray-400 border-gray-600' : 'bg-gray-200 text-gray-900 placeholder-gray-500 border-gray-300'}`}
-                    aria-label="Search products"
-                  />
-                  {searchQuery && (
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <div className="search-container">
+                    <input
+                      type="text"
+                      placeholder="Search products..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className={`w-[calc(100%-8rem)] p-2 border rounded-lg ${isDarkMode ? 'bg-gray-700 text-white placeholder-gray-400 border-gray-600' : 'bg-gray-200 text-gray-900 placeholder-gray-500 border-gray-300'}`}
+                      aria-label="Search products"
+                    />
                     <button
                       onClick={clearSearch}
-                      className="search-clear w-11 h-11 rounded-full bg-gray-600 text-white flex items-center justify-center text-lg font-semibold hover:bg-gray-500 scale-transition"
+                      className="search-clear w-10 h-10 rounded-full bg-red-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-red-600 scale-transition"
                       aria-label="Clear search"
                     >
                       <i className="fas fa-times"></i>
                     </button>
-                  )}
-                  <button
-                    onClick={toggleSearchInfoPopup}
-                    className="search-info w-11 h-11 rounded-full bg-green-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-green-600 scale-transition"
-                    aria-label="Search info"
-                  >
-                    ?
-                  </button>
-                </div>
-                <div className={`pt-4 ${isGridView ? 'grid-view' : 'grid gap-3'}`}>
-                  {filteredProducts.length === 0 ? (
-                    <p className={`text-center ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>No products found.</p>
-                  ) : (
-                    filteredProducts.map((product) => (
-                      <div
-                        key={product}
-                        className={`flex ${isGridView ? '' : 'items-center p-3 rounded-lg shadow-lg'} ${
-                          isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-200 hover:bg-gray-300'
-                        }`}
-                        onClick={() => {
-                          setCurrentProduct(product);
-                          setShowPopup(true);
-                        }}
-                      >
-                        <img
-                          src={`images/${product.replace(/ /g, '_')}.png`}
-                          alt={product}
-                          className={isGridView ? '' : 'w-[20vw] h-[20vw] max-w-24 max-h-24 mr-4 object-contain'}
-                          onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }}
-                        />
-                        <span className={isGridView ? '' : `text-[clamp(1rem,4vw,1.125rem)] font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                          {product}
-                        </span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-
-            {showPopup && (
-              <div
-                className={`fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center ${isClosingPopup ? 'fade-out' : 'fade-in'}`}
-                onClick={() => {
-                  setIsClosingPopup(true);
-                  setTimeout(() => {
-                    setShowPopup(false);
-                    setIsClosingPopup(false);
-                    setQuantity(1);
-                  }, 300);
-                }}
-              >
-                <div
-                  className={`p-6 rounded-lg w-[90vw] max-w-[20rem] shadow-lg relative ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button
-                    onClick={toggleProductInfoPopup}
-                    className="absolute top-2 right-2 w-11 h-11 rounded-full bg-green-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-green-600 scale-transition"
-                    aria-label="Product info"
-                  >
-                    ?
-                  </button>
-                  <div className="flex items-center mb-4">
-                    <img
-                      src={`images/${currentProduct.replace(/ /g, '_')}.png`}
-                      alt={currentProduct}
-                      className="w-[20vw] h-[20vw] max-w-24 max-h-24 mr-4 object-contain"
-                      onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }}
-                    />
-                    <h2 className={`text-[clamp(1rem,4vw,1.125rem)] font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{currentProduct}</h2>
-                  </div>
-                  <div className="flex items-center mb-4">
-                    <button
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="px-4 py-2 bg-gray-600 text-white rounded-lg scale-transition shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                      aria-label="Decrease quantity"
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      value={quantity}
-                      onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                      className={`mx-4 w-16 text-center border rounded-lg ${isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-300 text-gray-900 border-gray-400'}`}
-                      aria-label="Quantity"
-                    />
-                    <button
-                      onClick={() => setQuantity(quantity + 1)}
-                      className="px-4 py-2 bg-gray-600 text-white rounded-lg scale-transition shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                      aria-label="Increase quantity"
-                    >
-                      +
-                    </button>
-                  </div>
-                  <div className="flex justify-end space-x-2">
-                    <button
-                      onClick={() => {
-                        setIsClosingPopup(true);
-                        setTimeout(() => {
-                          setShowPopup(false);
-                          setIsClosingPopup(false);
-                          setQuantity(1);
-                        }, 300);
-                      }}
-                      className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={addToRestock}
-                      className="px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                    >
-                      Confirm
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {showResetConfirm && (
-              <div
-                className={`fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center ${isClosingResetPopup ? 'fade-out' : 'fade-in'}`}
-                onClick={() => {
-                  setIsClosingResetPopup(true);
-                  setTimeout(() => {
-                    setShowResetConfirm(false);
-                    setIsClosingResetPopup(false);
-                  }, 300);
-                }}
-              >
-                <div
-                  className={`p-6 rounded-lg w-[90vw] max-w-[20rem] shadow-lg relative ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button
-                    onClick={toggleResetInfoPopup}
-                    className="absolute top-2 right-2 w-11 h-11 rounded-full bg-green-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-green-600 scale-transition"
-                    aria-label="Reset info"
-                  >
-                    ?
-                  </button>
-                  <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>Are you sure you want to reset the restock list?</p>
-                  <div className="flex justify-end space-x-2">
-                    <button
-                      onClick={() => {
-                        setIsClosingResetPopup(true);
-                        setTimeout(() => {
-                          setShowResetConfirm(false);
-                          setIsClosingResetPopup(false);
-                        }, 300);
-                      }}
-                      className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={resetList}
-                      className="px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                    >
-                      Reset
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {showCollectPopup !== null && (
-              <div
-                className={`fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center ${isClosingCollectPopup ? 'fade-out' : 'fade-in'}`}
-                onClick={() => {
-                  setIsClosingCollectPopup(true);
-                  setTimeout(() => {
-                    setShowCollectPopup(null);
-                    setIsClosingCollectPopup(false);
-                  }, 300);
-                }}
-              >
-                <div
-                  className={`p-6 rounded-lg w-[90vw] max-w-[20rem] shadow-lg relative ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button
-                    onClick={toggleCollectInfoPopup}
-                    className="absolute top-2 right-2 w-11 h-11 rounded-full bg-green-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-green-600 scale-transition"
-                    aria-label="Collect info"
-                  >
-                    ?
-                  </button>
-                  <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
-                    Mark {restockList[showCollectPopup].product} (x{restockList[showCollectPopup].quantity}) as collected?
-                  </p>
-                  <div className="flex justify-end space-x-2">
-                    <button
-                      onClick={() => {
-                        setIsClosingCollectPopup(true);
-                        setTimeout(() => {
-                          setShowCollectPopup(null);
-                          setIsClosingCollectPopup(false);
-                        }, 300);
-                      }}
-                      className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={() => confirmCollected(showCollectPopup)}
-                      className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                    >
-                      Confirm
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {showInfoPopup && (
-              <div
-                className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingInfoPopup ? 'fade-out' : 'fade-in'}`}
-                onClick={toggleInfoPopup}
-              >
-                <div
-                  className={`p-6 rounded-lg w-[90vw] max-w-[20rem] shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
-                    Select products to add to the restock list. View and mark items as collected in the Restock List tab. Toggle dark/light mode for better visibility.
-                  </p>
-                  <div className="flex justify-end">
-                    <button
-                      onClick={toggleInfoPopup}
-                      className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {showProductInfoPopup && (
-              <div
-                className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingProductInfoPopup ? 'fade-out' : 'fade-in'}`}
-                onClick={toggleProductInfoPopup}
-              >
-                <div
-                  className={`p-6 rounded-lg w-[90vw] max-w-[20rem] shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
-                    Use the +/- buttons to adjust the quantity of the product. Confirm to add it to the restock list. If the product is already in the list, the quantity will be added to the existing amount.
-                  </p>
-                  <div className="flex justify-end">
-                    <button
-                      onClick={toggleProductInfoPopup}
-                      className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {showRestockInfoPopup && (
-              <div
-                className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingRestockInfoPopup ? 'fade-out' : 'fade-in'}`}
-                onClick={toggleRestockInfoPopup}
-              >
-                <div
-                  className={`p-6 rounded-lg w-[90vw] max-w-[20rem] shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
-                    View products in the restock list. Click 'View' to mark items as collected, or use 'Reset List' to clear all items. View the total number of items to plan restocking.
-                  </p>
-                  <div className="flex justify-end">
-                    <button
-                      onClick={toggleRestockInfoPopup}
-                      className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {showCollectInfoPopup && (
-              <div
-                className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingCollectInfoPopup ? 'fade-out' : 'fade-in'}`}
-                onClick={toggleCollectInfoPopup}
-              >
-                <div
-                  className={`p-6 rounded-lg w-[90vw] max-w-[20rem] shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
-                    Confirming marks the product as collected, removing it from the restock list. Undo an action within 5 seconds to restore the item.
-                  </p>
-                  <div className="flex justify-end">
-                    <button
-                      onClick={toggleCollectInfoPopup}
-                      className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {showResetInfoPopup && (
-              <div
-                className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingResetInfoPopup ? 'fade-out' : 'fade-in'}`}
-                onClick={toggleResetInfoPopup}
-              >
-                <div
-                  className={`p-6 rounded-lg w-[90vw] max-w-[20rem] shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
-                    Resetting clears all items from the restock list. Undo an action within 5 seconds to restore the list.
-                  </p>
-                  <div className="flex justify-end">
-                    <button
-                      onClick={toggleResetInfoPopup}
-                      className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {showSearchInfoPopup && (
-              <div
-                className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingSearchInfoPopup ? 'fade-out' : 'fade-in'}`}
-                onClick={toggleSearchInfoPopup}
-              >
-                <div
-                  className={`p-6 rounded-lg w-[90vw] max-w-[20rem] shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
-                    Search to quickly find products by name.
-                  </p>
-                  <div className="flex justify-end">
                     <button
                       onClick={toggleSearchInfoPopup}
-                      className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
+                      className="search-info w-10 h-10 rounded-full bg-green-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-green-600 scale-transition"
+                      aria-label="Search info"
                     >
-                      Close
+                      ?
                     </button>
                   </div>
+                  <div className={`pt-4 ${isGridView ? 'grid-view' : 'grid gap-3'}`}>
+                    {filteredProducts.length === 0 ? (
+                      <p className={`text-center ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>No products found.</p>
+                    ) : (
+                      filteredProducts.map((product) => (
+                        <div
+                          key={product}
+                          className={`flex ${isGridView ? '' : 'items-center p-3 rounded-lg shadow-lg'} ${
+                            isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-200 hover:bg-gray-300'
+                          }`}
+                          onClick={() => {
+                            setCurrentProduct(product);
+                            setShowPopup(true);
+                          }}
+                        >
+                          <img
+                            src={`images/${product.replace(/ /g, '_')}.png`}
+                            alt={product}
+                            className={isGridView ? '' : 'w-[20vw] h-[20vw] max-w-24 max-h-24 mr-4 object-contain'}
+                            onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }}
+                          />
+                          <span className={isGridView ? '' : `text-[clamp(1rem,4vw,1.125rem)] font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                            {product}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </main>
+
+          <footer className="footer">
+            <div className="w-full max-w-[90vw] mx-auto flex justify-between items-center text-[clamp(0.875rem,3vw,1rem)]">
+              <button
+                onClick={toggleChangelogPopup}
+                className={`underline ${isDarkMode ? 'text-gray-200 hover:text-blue-500' : 'text-gray-600 hover:text-blue-500'}`}
+              >
+                Changelog
+              </button>
+              <span className={isDarkMode ? 'text-gray-200' : 'text-gray-600'}>V2.1</span>
+            </div>
+          </footer>
+
+          {showPopup && (
+            <div
+              className={`fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center ${isClosingPopup ? 'fade-out' : 'fade-in'}`}
+              onClick={() => {
+                setIsClosingPopup(true);
+                setTimeout(() => {
+                  setShowPopup(false);
+                  setIsClosingPopup(false);
+                  setQuantity(1);
+                }, 300);
+              }}
+            >
+              <div
+                className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg relative ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={toggleProductInfoPopup}
+                  className="absolute top-2 right-2 w-10 h-10 rounded-full bg-green-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-green-600 scale-transition"
+                  aria-label="Product info"
+                >
+                  ?
+                </button>
+                <div className="flex items-center mb-4">
+                  <img
+                    src={`images/${currentProduct.replace(/ /g, '_')}.png`}
+                    alt={currentProduct}
+                    className="w-[20vw] h-[20vw] max-w-24 max-h-24 mr-4 object-contain"
+                    onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }}
+                  />
+                  <h2 className={`text-[clamp(1rem,4vw,1.125rem)] font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{currentProduct}</h2>
+                </div>
+                <div className="flex items-center mb-4">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg scale-transition shadow-md text-[clamp(0.875rem,3vw,1rem)]"
+                    aria-label="Decrease quantity"
+                  >
+                    -
+                  </button>
+                  <input
+                    type="number"
+                    value={quantity}
+                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                    className={`mx-4 w-16 text-center border rounded-lg ${isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-300 text-gray-900 border-gray-400'}`}
+                    aria-label="Quantity"
+                  />
+                  <button
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg scale-transition shadow-md text-[clamp(0.875rem,3vw,1rem)]"
+                    aria-label="Increase quantity"
+                  >
+                    +
+                  </button>
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <button
+                    onClick={() => {
+                      setIsClosingPopup(true);
+                      setTimeout(() => {
+                        setShowPopup(false);
+                        setIsClosingPopup(false);
+                        setQuantity(1);
+                      }, 300);
+                    }}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={addToRestock}
+                    className="px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
+                  >
+                    Confirm
+                  </button>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {showToast && (
-              <div className={`toast flex items-center space-x-4 fade-in`}>
-                <p className={`font-semibold text-[clamp(0.875rem,3vw,1rem)]`}>
-                  {lastAction?.type === 'collect' ? 'Item marked as collected.' : 'Restock list reset.'}
-                </p>
+          {showResetConfirm && (
+            <div
+              className={`fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center ${isClosingResetPopup ? 'fade-out' : 'fade-in'}`}
+              onClick={() => {
+                setIsClosingResetPopup(true);
+                setTimeout(() => {
+                  setShowResetConfirm(false);
+                  setIsClosingResetPopup(false);
+                }, 300);
+              }}
+            >
+              <div
+                className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg relative ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
+                onClick={(e) => e.stopPropagation()}
+              >
                 <button
-                  onClick={undoAction}
-                  className="px-3 py-1 bg-blue-700 text-white rounded-lg hover:bg-blue-600 shadow-md text-[clamp(0.75rem,3vw,0.875rem)]"
+                  onClick={toggleResetInfoPopup}
+                  className="absolute top-2 right-2 w-10 h-10 rounded-full bg-green-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-green-600 scale-transition"
+                  aria-label="Reset info"
                 >
-                  Undo
+                  ?
                 </button>
+                <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>Are you sure you want to reset the restock list?</p>
+                <div className="flex justify-end space-x-2">
+                  <button
+                    onClick={() => {
+                      setIsClosingResetPopup(true);
+                      setTimeout(() => {
+                        setShowResetConfirm(false);
+                        setIsClosingResetPopup(false);
+                      }, 300);
+                    }}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={resetList}
+                    className="px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
+                  >
+                    Reset
+                  </button>
+                </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
+
+          {showCollectPopup !== null && (
+            <div
+              className={`fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center ${isClosingCollectPopup ? 'fade-out' : 'fade-in'}`}
+              onClick={() => {
+                setIsClosingCollectPopup(true);
+                setTimeout(() => {
+                  setShowCollectPopup(null);
+                  setIsClosingCollectPopup(false);
+                }, 300);
+              }}
+            >
+              <div
+                className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg relative ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={toggleCollectInfoPopup}
+                  className="absolute top-2 right-2 w-10 h-10 rounded-full bg-green-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-green-600 scale-transition"
+                  aria-label="Collect info"
+                >
+                  ?
+                </button>
+                <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
+                  Mark {restockList[showCollectPopup].product} (x{restockList[showCollectPopup].quantity}) as collected?
+                </p>
+                <div className="flex justify-end space-x-2">
+                  <button
+                    onClick={() => {
+                      setIsClosingCollectPopup(true);
+                      setTimeout(() => {
+                        setShowCollectPopup(null);
+                        setIsClosingCollectPopup(false);
+                      }, 300);
+                    }}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => confirmCollected(showCollectPopup)}
+                    className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showInfoPopup && (
+            <div
+              className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingInfoPopup ? 'fade-out' : 'fade-in'}`}
+              onClick={toggleInfoPopup}
+            >
+              <div
+                className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
+                  Select products to add to the restock list. View and mark items as collected in the Restock List tab. Toggle dark/light mode for better visibility. The footer appears when scrolling down and hides when scrolling up.
+                </p>
+                <div className="flex justify-end">
+                  <button
+                    onClick={toggleInfoPopup}
+                    className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showProductInfoPopup && (
+            <div
+              className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingProductInfoPopup ? 'fade-out' : 'fade-in'}`}
+              onClick={toggleProductInfoPopup}
+            >
+              <div
+                className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
+                  Use the +/- buttons to adjust the quantity of the product. Confirm to add it to the restock list. If the product is already in the list, the quantity will be added to the existing amount.
+                </p>
+                <div className="flex justify-end">
+                  <button
+                    onClick={toggleProductInfoPopup}
+                    className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showRestockInfoPopup && (
+            <div
+              className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingRestockInfoPopup ? 'fade-out' : 'fade-in'}`}
+              onClick={toggleRestockInfoPopup}
+            >
+              <div
+                className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
+                  View products in the restock list. Click 'View' to mark items as collected, or use 'Reset List' to clear all items. View the total number of items to plan restocking. The changelog has been updated with a new format.
+                </p>
+                <div className="flex justify-end">
+                  <button
+                    onClick={toggleRestockInfoPopup}
+                    className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showCollectInfoPopup && (
+            <div
+              className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingCollectInfoPopup ? 'fade-out' : 'fade-in'}`}
+              onClick={toggleCollectInfoPopup}
+            >
+              <div
+                className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
+                  Confirming marks the product as collected, removing it from the restock list. Undo an action within 5 seconds to restore the item.
+                </p>
+                <div className="flex justify-end">
+                  <button
+                    onClick={toggleCollectInfoPopup}
+                    className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showResetInfoPopup && (
+            <div
+              className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingResetInfoPopup ? 'fade-out' : 'fade-in'}`}
+              onClick={toggleResetInfoPopup}
+            >
+              <div
+                className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
+                  Resetting clears all items from the restock list. Undo an action within 5 seconds to restore the list.
+                </p>
+                <div className="flex justify-end">
+                  <button
+                    onClick={toggleResetInfoPopup}
+                    className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showSearchInfoPopup && (
+            <div
+              className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingSearchInfoPopup ? 'fade-out' : 'fade-in'}`}
+              onClick={toggleSearchInfoPopup}
+            >
+              <div
+                className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
+                  Search to quickly find products by name.
+                </p>
+                <div className="flex justify-end">
+                  <button
+                    onClick={toggleSearchInfoPopup}
+                    className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showChangelogPopup && (
+            <div
+              className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingChangelogPopup ? 'fade-out' : 'fade-in'}`}
+              onClick={toggleChangelogPopup}
+            >
+              <div
+                className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg border-2 border-gray-300 ${isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-gray-200 text-gray-900'}`}
+                onClick={(e) => e.stopPropagation()}
+                style={{ maxHeight: '70vh', overflowY: 'auto' }}
+              >
+                <h3 className={`text-[clamp(1.25rem,4vw,1.5rem)] font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Changelog (V2.1)</h3>
+                <div className="changelog-list">
+                  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Added (+)</h4>
+                  <ul>
+                    <li className="added">Search bar for faster product search</li>
+                    <li className="added">Clear button for search bar</li>
+                    <li className="added">Total items count in Restock List</li>
+                    <li className="added">Undo option for 5 seconds after actions</li>
+                    <li className="added">Dark/light mode toggle with icons</li>
+                    <li className="added">Responsive grid layout</li>
+                    <li className="added">Footer with changelog link</li>
+                    <li className="added">Improved button sizes for mobile</li>
+                    <li className="added">Better image and text scaling</li>
+                    <li className="added">Updated help popups</li>
+                    <li className="added">Soft colors in light mode</li>
+                    <li className="added">Toast notification at top</li>
+                    <li className="added">Footer visibility on scroll down</li>
+                    <li className="added">Changelog with + and - sections</li>
+                  </ul>
+                  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>Removed (-)</h4>
+                  <ul>
+                    <li className="removed">Developer credit from footer</li>
+                  </ul>
+                </div>
+                <div className="flex justify-end mt-4">
+                  <button
+                    onClick={toggleChangelogPopup}
+                    className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showToast && (
+            <div className={`toast flex items-center space-x-4 fade-in`}>
+              <p className={`font-semibold text-[clamp(0.875rem,3vw,1rem)]`}>
+                {lastAction?.type === 'collect' ? 'Item marked as collected.' : 'Restock list reset.'}
+              </p>
+              <button
+                onClick={undoAction}
+                className="px-3 py-1 bg-blue-700 text-white rounded-lg hover:bg-blue-600 shadow-md text-[clamp(0.75rem,3vw,0.875rem)]"
+              >
+                Undo
+              </button>
+            </div>
+          )}
         </div>
       );
     };
