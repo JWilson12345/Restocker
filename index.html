@@ -1,43 +1,4 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -47,13 +8,14 @@
   <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.22.5/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <style>
     .slide-down {
       animation: slideDown 0.5s ease-out forwards;
     }
     @keyframes slideDown {
       from { transform: translateY(0); }
-      to { transform: translateY(calc(100% + 12px)); } /* Move to bottom of list with spacing */
+      to { transform: translateY(calc(100% + 12px)); }
     }
     .fade-down {
       animation: fadeDown 0.5s ease-out forwards;
@@ -65,7 +27,7 @@
       }
       to {
         opacity: 0;
-        transform: translateY(20px); /* Slight downward movement */
+        transform: translateY(20px);
       }
     }
     .slide-up {
@@ -76,7 +38,7 @@
         transform: translateY(0);
       }
       to {
-        transform: translateY(-100%); /* Move up to fill the gap */
+        transform: translateY(-100%);
       }
     }
     .fade-out {
@@ -90,30 +52,192 @@
         opacity: 0;
       }
     }
+    .fade-in {
+      animation: fadeIn 0.3s ease-in forwards;
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
     .scale-transition {
       transition: transform 0.2s ease;
     }
     .scale-transition:hover {
       transform: scale(1.1);
     }
-    body {
-      background: linear-gradient(135deg, #1a202c, #2d3748); /* Deep blue-gray to dark gray gradient */
-      min-height: 100vh;
+    .slide-grid {
+      transition: transform 0.5s ease-out;
+    }
+    .dark {
+      background: linear-gradient(135deg, #1a202c, #2d3748);
+    }
+    .light {
+      background: #f3f4f6; /* gray-100 */
     }
     .restock-container {
-      min-height: 60vh; /* Ensure container takes enough height */
-      overflow-y: auto; /* Allow scrolling if needed */
+      min-height: 60vh;
+      overflow-y: auto;
+    }
+    .fixed-buttons {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      padding-top: 1rem;
+      padding-bottom: 0.5rem;
+    }
+    .grid-view {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem; /* gap-3 */
+    }
+    .grid-view > div {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 1rem; /* p-4 */
+      border-radius: 0.5rem; /* rounded-lg */
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); /* shadow-lg */
+    }
+    .dark .grid-view > div {
+      background-color: #2d3748; /* bg-gray-800 */
+    }
+    .light .grid-view > div {
+      background-color: #e5e7eb; /* bg-gray-200 */
+    }
+    .dark .grid-view > div:hover {
+      background-color: #4a5568; /* hover:bg-gray-700 */
+    }
+    .light .grid-view > div:hover {
+      background-color: #d1d5db; /* hover:bg-gray-300 */
+    }
+    .grid-view img {
+      width: 5rem; /* w-20 */
+      height: 5rem; /* h-20 */
+      object-fit: contain;
+    }
+    .grid-view span {
+      font-size: 0.875rem; /* text-sm */
+      margin-top: 0.5rem; /* mt-2 */
+    }
+    .dark .grid-view span {
+      color: #ffffff; /* text-white */
+    }
+    .light .grid-view span {
+      color: #111827; /* text-gray-900 */
+    }
+    .restock-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem; /* gap-3 */
+    }
+    .restock-grid > div {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 1rem; /* p-4 */
+      padding-bottom: 2.5rem; /* pb-10 */
+      border-radius: 0.5rem; /* rounded-lg */
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); /* shadow-lg */
+      min-height: 10rem; /* min-h-40 */
+      transition: transform 0.5s ease-out; /* slide-grid */
+    }
+    .dark .restock-grid > div {
+      background-color: #2d3748; /* bg-gray-800 */
+    }
+    .light .restock-grid > div {
+      background-color: #e5e7eb; /* bg-gray-200 */
+    }
+    .dark .restock-grid > div:hover {
+      background-color: #4a5568; /* hover:bg-gray-700 */
+    }
+    .light .restock-grid > div:hover {
+      background-color: #d1d5db; /* hover:bg-gray-300 */
+    }
+    .restock-grid img {
+      width: 5rem; /* w-20 */
+      height: 5rem; /* h-20 */
+      object-fit: contain;
+    }
+    .restock-grid span {
+      font-size: 0.875rem; /* text-sm */
+      margin-top: 0.5rem; /* mt-2 */
+    }
+    .dark .restock-grid span {
+      color: #ffffff; /* text-white */
+    }
+    .light .restock-grid span {
+      color: #111827; /* text-gray-900 */
+    }
+    .restock-grid button {
+      margin-top: 0.5rem; /* mt-2 */
+      font-size: 0.875rem; /* text-sm */
+    }
+    .toast {
+      position: fixed;
+      bottom: 1rem; /* bottom-4 */
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 1rem; /* p-4 */
+      border-radius: 0.5rem; /* rounded-lg */
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); /* shadow-lg */
+      z-index: 50;
+    }
+    .dark .toast {
+      background-color: #2d3748; /* bg-gray-800 */
+      color: #ffffff; /* text-white */
+    }
+    .light .toast {
+      background-color: #e5e7eb; /* bg-gray-200 */
+      color: #111827; /* text-gray-900 */
     }
   </style>
 </head>
-<body>
+<body className="dark">
   <div id="root"></div>
+  <script type="text/javascript">
+    var gk_isXlsx = false;
+    var gk_xlsxFileLookup = {};
+    var gk_fileData = {};
+    function filledCell(cell) {
+      return cell !== '' && cell != null;
+    }
+    function loadFileData(filename) {
+      if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+        try {
+          var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+          var firstSheetName = workbook.SheetNames[0];
+          var worksheet = workbook.Sheets[firstSheetName];
+          var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+          var filteredData = jsonData.filter(row => row.some(filledCell));
+          var headerRowIndex = filteredData.findIndex((row, index) =>
+            row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+          );
+          if (headerRowIndex === -1 || headerRowIndex > 25) {
+            headerRowIndex = 0;
+          }
+          var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+          csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+          return csv;
+        } catch (e) {
+          console.error(e);
+          return "";
+        }
+      }
+      return gk_fileData[filename] || "";
+    }
+  </script>
   <script type="text/babel">
     const products = [
       "Coke gray", "Coke red", "Coke redder", "Fanta blue", "Fanta red",
       "Fanta orange", "Fanta yellow", "Viminto purple", "Dr Pepper", "Pepsi black",
       "Lemmon green", "Dog brown", "D&b purple", "Tango colour", "Tango purple",
-      "Tango green", "Tango orange", "Iron bru", "Water"
+      "Tango green", "Tango orange", "Iron bru", "Water blue"
     ];
 
     const App = () => {
@@ -127,20 +251,71 @@
       const [showResetConfirm, setShowResetConfirm] = React.useState(false);
       const [showRestockList, setShowRestockList] = React.useState(false);
       const [showCollectPopup, setShowCollectPopup] = React.useState(null);
-      const [fadingItemIndex, setFadingItemIndex] = React.useState(null); // Track item being faded
-      const [slidingItems, setSlidingItems] = React.useState([]); // Track items sliding up
-      const [isClosingPopup, setIsClosingPopup] = React.useState(false); // Track popup closing animation
-      const [isClosingCollectPopup, setIsClosingCollectPopup] = React.useState(false); // Track collect popup closing animation
-      const [isClosingResetPopup, setIsClosingResetPopup] = React.useState(false); // Track reset popup closing animation
+      const [showInfoPopup, setShowInfoPopup] = React.useState(false);
+      const [showProductInfoPopup, setShowProductInfoPopup] = React.useState(false);
+      const [showRestockInfoPopup, setShowRestockInfoPopup] = React.useState(false);
+      const [showCollectInfoPopup, setShowCollectInfoPopup] = React.useState(false);
+      const [showResetInfoPopup, setShowResetInfoPopup] = React.useState(false);
+      const [showSearchInfoPopup, setShowSearchInfoPopup] = React.useState(false);
+      const [fadingItemIndex, setFadingItemIndex] = React.useState(null);
+      const [slidingItems, setSlidingItems] = React.useState([]);
+      const [isClosingPopup, setIsClosingPopup] = React.useState(false);
+      const [isClosingCollectPopup, setIsClosingCollectPopup] = React.useState(false);
+      const [isClosingResetPopup, setIsClosingResetPopup] = React.useState(false);
+      const [isClosingInfoPopup, setIsClosingInfoPopup] = React.useState(false);
+      const [isClosingProductInfoPopup, setIsClosingProductInfoPopup] = React.useState(false);
+      const [isClosingRestockInfoPopup, setIsClosingRestockInfoPopup] = React.useState(false);
+      const [isClosingCollectInfoPopup, setIsClosingCollectInfoPopup] = React.useState(false);
+      const [isClosingResetInfoPopup, setIsClosingResetInfoPopup] = React.useState(false);
+      const [isClosingSearchInfoPopup, setIsClosingSearchInfoPopup] = React.useState(false);
+      const [showButtons, setShowButtons] = React.useState(true);
+      const [lastScrollY, setLastScrollY] = React.useState(0);
+      const [isGridView, setIsGridView] = React.useState(false);
+      const [isDarkMode, setIsDarkMode] = React.useState(() => {
+        const saved = localStorage.getItem('isDarkMode');
+        return saved !== null ? JSON.parse(saved) : true;
+      });
+      const [searchQuery, setSearchQuery] = React.useState('');
+      const [showToast, setShowToast] = React.useState(false);
+      const [lastAction, setLastAction] = React.useState(null);
 
       React.useEffect(() => {
         localStorage.setItem('restockList', JSON.stringify(restockList));
       }, [restockList]);
 
+      React.useEffect(() => {
+        localStorage.setItem('isDarkMode', JSON.stringify(isDarkMode));
+        document.body.className = isDarkMode ? 'dark' : 'light';
+      }, [isDarkMode]);
+
+      React.useEffect(() => {
+        const handleScroll = () => {
+          const currentScrollY = window.scrollY;
+          if (currentScrollY > lastScrollY && currentScrollY > 50) {
+            setShowButtons(false);
+          } else if (currentScrollY < lastScrollY) {
+            setShowButtons(true);
+          }
+          setLastScrollY(currentScrollY);
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+      }, [lastScrollY]);
+
+      React.useEffect(() => {
+        if (showToast) {
+          const timer = setTimeout(() => {
+            setShowToast(false);
+            setLastAction(null);
+          }, 5000);
+          return () => clearTimeout(timer);
+        }
+      }, [showToast]);
+
       const addToRestock = () => {
         const existingItem = restockList.find(item => item.product === currentProduct && !item.collected);
         if (existingItem) {
-          // Merge by updating quantity
           const updatedList = restockList.map(item =>
             item.product === currentProduct && !item.collected
               ? { ...item, quantity: item.quantity + quantity }
@@ -148,7 +323,6 @@
           );
           setRestockList(updatedList);
         } else {
-          // Add new item
           setRestockList([...restockList, { product: currentProduct, quantity, collected: false }]);
         }
         setIsClosingPopup(true);
@@ -156,67 +330,199 @@
           setShowPopup(false);
           setIsClosingPopup(false);
           setQuantity(1);
-        }, 300); // Match fade-out animation duration
+        }, 300);
       };
 
       const confirmCollected = (index) => {
-        setFadingItemIndex(index); // Start fading the specific item
-        // Determine items to slide up (those below the removed item)
-        const itemsToSlide = restockList.filter((item, i) => i > index && !item.collected).map((_, i) => index + i + 1);
+        setFadingItemIndex(index);
+        const item = restockList[index];
+        setLastAction({ type: 'collect', data: { ...item, index } });
+        setShowToast(true);
+        const itemsToSlide = isGridView ? [] : restockList.filter((item, i) => i > index && !item.collected).map((_, i) => index + i + 1);
         setSlidingItems(itemsToSlide);
         setTimeout(() => {
           const updatedList = [...restockList];
           updatedList[index].collected = true;
-          setRestockList(updatedList.filter(item => !item.collected)); // Keep only uncollected
-          setFadingItemIndex(null); // Reset after removal
-          setSlidingItems([]); // Reset sliding items
-        }, 500); // Match animation duration
+          setRestockList(updatedList.filter(item => !item.collected));
+          setFadingItemIndex(null);
+          setSlidingItems([]);
+        }, 500);
         setIsClosingCollectPopup(true);
         setTimeout(() => {
           setShowCollectPopup(null);
           setIsClosingCollectPopup(false);
-        }, 300); // Match fade-out animation duration
+        }, 300);
       };
 
       const resetList = () => {
+        setLastAction({ type: 'reset', data: [...restockList] });
+        setShowToast(true);
         setRestockList([]);
         setIsClosingResetPopup(true);
         setTimeout(() => {
           setShowResetConfirm(false);
           setIsClosingResetPopup(false);
-        }, 300); // Match fade-out animation duration
+        }, 300);
       };
+
+      const undoAction = () => {
+        if (lastAction?.type === 'collect') {
+          const { data } = lastAction;
+          const updatedList = [...restockList];
+          updatedList.splice(data.index, 0, { ...data, collected: false });
+          setRestockList(updatedList);
+        } else if (lastAction?.type === 'reset') {
+          setRestockList(lastAction.data);
+        }
+        setShowToast(false);
+        setLastAction(null);
+      };
+
+      const toggleInfoPopup = () => {
+        if (showInfoPopup) {
+          setIsClosingInfoPopup(true);
+          setTimeout(() => {
+            setShowInfoPopup(false);
+            setIsClosingInfoPopup(false);
+          }, 300);
+        } else {
+          setShowInfoPopup(true);
+        }
+      };
+
+      const toggleProductInfoPopup = () => {
+        if (showProductInfoPopup) {
+          setIsClosingProductInfoPopup(true);
+          setTimeout(() => {
+            setShowProductInfoPopup(false);
+            setIsClosingProductInfoPopup(false);
+          }, 300);
+        } else {
+          setShowProductInfoPopup(true);
+        }
+      };
+
+      const toggleRestockInfoPopup = () => {
+        if (showRestockInfoPopup) {
+          setIsClosingRestockInfoPopup(true);
+          setTimeout(() => {
+            setShowRestockInfoPopup(false);
+            setIsClosingRestockInfoPopup(false);
+          }, 300);
+        } else {
+          setShowRestockInfoPopup(true);
+        }
+      };
+
+      const toggleCollectInfoPopup = () => {
+        if (showCollectInfoPopup) {
+          setIsClosingCollectInfoPopup(true);
+          setTimeout(() => {
+            setShowCollectInfoPopup(false);
+            setIsClosingCollectInfoPopup(false);
+          }, 300);
+        } else {
+          setShowCollectInfoPopup(true);
+        }
+      };
+
+      const toggleResetInfoPopup = () => {
+        if (showResetInfoPopup) {
+          setIsClosingResetInfoPopup(true);
+          setTimeout(() => {
+            setShowResetInfoPopup(false);
+            setIsClosingResetInfoPopup(false);
+          }, 300);
+        } else {
+          setShowResetInfoPopup(true);
+        }
+      };
+
+      const toggleSearchInfoPopup = () => {
+        if (showSearchInfoPopup) {
+          setIsClosingSearchInfoPopup(true);
+          setTimeout(() => {
+            setShowSearchInfoPopup(false);
+            setIsClosingSearchInfoPopup(false);
+          }, 300);
+        } else {
+          setShowSearchInfoPopup(true);
+        }
+      };
+
+      const toggleView = () => {
+        setIsGridView(!isGridView);
+      };
+
+      const toggleTheme = () => {
+        setIsDarkMode(!isDarkMode);
+      };
+
+      const filteredProducts = products.filter(product =>
+        product.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+      const totalItems = restockList.reduce((sum, item) => sum + item.quantity, 0);
 
       return (
         <div className="min-h-screen p-4">
           <div className="max-w-md mx-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold text-white">Vending Machine Restock</h1>
-            </div>
-
-            <div className="flex justify-between mb-6">
-              <button
-                onClick={() => setShowRestockList(false)}
-                className={`flex-1 py-2 mr-2 rounded-lg font-semibold bg-gray-700 text-white shadow-md hover:bg-gray-600 ${
-                  !showRestockList ? 'bg-blue-800' : ''
-                }`}
-              >
-                Add Products
-              </button>
-              <button
-                onClick={() => setShowRestockList(true)}
-                className={`flex-1 py-2 rounded-lg font-semibold bg-gray-700 text-white shadow-md hover:bg-gray-600 ${
-                  showRestockList ? 'bg-blue-800' : ''
-                }`}
-              >
-                Restock List
-              </button>
+            <div className={`fixed-buttons w-full max-w-md mx-auto ${showButtons ? 'fade-in' : 'fade-out'} ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
+              <div className="flex items-center mb-4">
+                <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Vending Machine Restock</h1>
+                <div className="flex ml-3 space-x-2">
+                  <button
+                    onClick={toggleInfoPopup}
+                    className="w-8 h-8 rounded-full bg-green-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-green-600 scale-transition"
+                  >
+                    ?
+                  </button>
+                  <button
+                    onClick={toggleView}
+                    className="w-8 h-8 rounded-full bg-blue-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-blue-600 scale-transition format-toggle"
+                  >
+                    <i className={`fa ${isGridView ? 'fa-bars' : 'fa-th'}`}></i>
+                  </button>
+                  <button
+                    onClick={toggleTheme}
+                    className="w-8 h-8 rounded-full bg-blue-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-blue-600 scale-transition"
+                  >
+                    <i className={`fa ${isDarkMode ? 'fa-moon' : 'fa-sun'}`}></i>
+                  </button>
+                </div>
+              </div>
+              <div className="flex justify-between mb-6">
+                <button
+                  onClick={() => setShowRestockList(false)}
+                  className={`flex-1 py-2 mr-2 rounded-lg font-semibold text-white shadow-md hover:bg-gray-600 ${
+                    isDarkMode ? 'bg-gray-700' : 'bg-gray-400'
+                  } ${!showRestockList ? isDarkMode ? 'bg-blue-800' : 'bg-blue-600' : ''}`}
+                >
+                  Add Products
+                </button>
+                <button
+                  onClick={() => setShowRestockList(true)}
+                  className={`flex-1 py-2 rounded-lg font-semibold text-white shadow-md hover:bg-gray-600 ${
+                    isDarkMode ? 'bg-gray-700' : 'bg-gray-400'
+                  } ${showRestockList ? isDarkMode ? 'bg-blue-800' : 'bg-blue-600' : ''}`}
+                >
+                  Restock List
+                </button>
+              </div>
             </div>
 
             {showRestockList ? (
-              <div className="restock-container">
+              <div className="restock-container pt-20">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold text-white">Restock List</h2>
+                  <div className="flex items-center">
+                    <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Restock List</h2>
+                    <button
+                      onClick={toggleRestockInfoPopup}
+                      className="ml-3 w-8 h-8 rounded-full bg-green-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-green-600 scale-transition"
+                    >
+                      ?
+                    </button>
+                  </div>
                   <button
                     onClick={() => setShowResetConfirm(true)}
                     className="px-4 py-2 bg-red-700 text-white rounded-lg shadow-md hover:bg-red-600"
@@ -224,63 +530,122 @@
                     Reset List
                   </button>
                 </div>
+                <p className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                  Total Items: {totalItems}
+                </p>
                 {restockList.length === 0 ? (
-                  <p className="text-center text-gray-200">No items in restock list.</p>
+                  <p className={`text-center ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>No items in restock list.</p>
                 ) : (
-                  <div className="space-y-3">
+                  <div className={isGridView ? 'restock-grid' : 'space-y-3'}>
                     {restockList.filter(item => !item.collected).map((item, index) => (
                       <div
                         key={index}
-                        className={`flex items-center justify-between p-3 rounded-lg bg-gray-800 restock-item shadow-md ${
-                          fadingItemIndex === index ? 'fade-down' : slidingItems.includes(index) ? 'slide-up' : ''
-                        }`}
+                        className={`flex ${isGridView ? 'slide-grid' : 'items-center justify-between p-3 rounded-lg restock-item shadow-md'} ${
+                          fadingItemIndex === index ? 'fade-down' : isGridView ? '' : slidingItems.includes(index) ? 'slide-up' : ''
+                        } ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
                       >
-                        <div className="flex items-center">
+                        <div className={isGridView ? '' : 'flex items-center'}>
                           <img
                             src={`images/${item.product.replace(/ /g, '_')}.png`}
                             alt={item.product}
-                            className="w-24 h-24 mr-4 object-contain"
+                            className={isGridView ? '' : 'w-24 h-24 mr-4 object-contain'}
                             onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }}
                           />
-                          <span className="ml-4 text-lg text-white">{item.product} (x{item.quantity})</span>
+                          <span className={isGridView ? '' : `ml-4 text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                            {item.product} (x{item.quantity})
+                          </span>
                         </div>
-                        <button
-                          onClick={() => setShowCollectPopup(restockList.findIndex(i => i.product === item.product && i.quantity === item.quantity && !i.collected))}
-                          className="px-4 py-2 bg-blue-700 text-white rounded-lg shadow-md hover:bg-blue-600"
-                        >
-                          View
-                        </button>
+                        {!isGridView && (
+                          <button
+                            onClick={() => setShowCollectPopup(restockList.findIndex(i => i.product === item.product && i.quantity === item.quantity && !i.collected))}
+                            className="px-4 py-2 bg-blue-700 text-white rounded-lg shadow-md hover:bg-blue-600"
+                          >
+                            View
+                          </button>
+                        )}
+                        {isGridView && (
+                          <button
+                            onClick={() => setShowCollectPopup(restockList.findIndex(i => i.product === item.product && i.quantity === item.quantity && !i.collected))}
+                            className="mt-2 px-3 py-1.5 bg-blue-700 text-white rounded-lg shadow-md hover:bg-blue-600 text-sm"
+                          >
+                            View
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
                 )}
               </div>
             ) : (
-              <div className="grid gap-3">
-                {products.map((product) => (
-                  <div
-                    key={product}
-                    className="flex items-center p-3 bg-gray-800 rounded-lg shadow-lg hover:bg-gray-700"
-                    onClick={() => {
-                      setCurrentProduct(product);
-                      setShowPopup(true);
-                    }}
+              <div className="pt-20">
+                <div className="flex items-center mb-4">
+                  <input
+                    type="text"
+                    placeholder="Search products..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className={`w-full p-2 border rounded-lg ${isDarkMode ? 'bg-gray-700 text-white placeholder-gray-400 border-gray-600' : 'bg-gray-200 text-gray-900 placeholder-gray-500 border-gray-300'}`}
+                  />
+                  <button
+                    onClick={toggleSearchInfoPopup}
+                    className="ml-2 w-6 h-6 rounded-full bg-green-700 text-white flex items-center justify-center text-base font-semibold hover:bg-green-600 scale-transition"
                   >
-                    <img
-                      src={`images/${product.replace(/ /g, '_')}.png`}
-                      alt={product}
-                      className="w-24 h-24 mr-6 object-contain"
-                      onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }}
-                    />
-                    <span className="text-lg font-medium text-white">{product}</span>
-                  </div>
-                ))}
+                    ?
+                  </button>
+                </div>
+                <div className={`pt-4 ${isGridView ? 'grid-view' : 'grid gap-3'}`}>
+                  {filteredProducts.length === 0 ? (
+                    <p className={`text-center ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>No products found.</p>
+                  ) : (
+                    filteredProducts.map((product) => (
+                      <div
+                        key={product}
+                        className={`flex ${isGridView ? '' : 'items-center p-3 rounded-lg shadow-lg'} ${
+                          isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-200 hover:bg-gray-300'
+                        }`}
+                        onClick={() => {
+                          setCurrentProduct(product);
+                          setShowPopup(true);
+                        }}
+                      >
+                        <img
+                          src={`images/${product.replace(/ /g, '_')}.png`}
+                          alt={product}
+                          className={isGridView ? '' : 'w-24 h-24 mr-6 object-contain'}
+                          onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }}
+                        />
+                        <span className={isGridView ? '' : `text-lg font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                          {product}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             )}
 
             {showPopup && (
-              <div className={`fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center ${isClosingPopup ? 'fade-out' : ''}`}>
-                <div className="bg-gray-800 p-6 rounded-lg w-11/12 max-w-sm shadow-lg">
+              <div
+                className={`fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center ${isClosingPopup ? 'fade-out' : 'fade-in'}`}
+                onClick={() => {
+                  setIsClosingPopup(true);
+                  setTimeout(() => {
+                    setShowPopup(false);
+                    setIsClosingPopup(false);
+                    setQuantity(1);
+                  }, 300);
+                }}
+              >
+                <div
+                  className={`p-6 rounded-lg w-11/12 max-w-sm shadow-lg relative ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    onClick={toggleProductInfoPopup}
+                    className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-700 text-white flex items-center justify-center text-base font-semibold hover:bg-green-600 scale-transition"
+                  >
+                    ?
+                  </button>
                   <div className="flex items-center mb-4">
                     <img
                       src={`images/${currentProduct.replace(/ /g, '_')}.png`}
@@ -288,7 +653,7 @@
                       className="w-24 h-24 mr-4 object-contain"
                       onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }}
                     />
-                    <h2 className="text-lg font-semibold text-white">{currentProduct}</h2>
+                    <h2 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{currentProduct}</h2>
                   </div>
                   <div className="flex items-center mb-4">
                     <button
@@ -301,7 +666,7 @@
                       type="number"
                       value={quantity}
                       onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="mx-4 w-16 text-center border rounded-lg bg-gray-700 text-white"
+                      className={`mx-4 w-16 text-center border rounded-lg ${isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-300 text-gray-900 border-gray-400'}`}
                     />
                     <button
                       onClick={() => setQuantity(quantity + 1)}
@@ -318,7 +683,7 @@
                           setShowPopup(false);
                           setIsClosingPopup(false);
                           setQuantity(1);
-                        }, 300); // Match fade-out animation duration
+                        }, 300);
                       }}
                       className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400 shadow-md"
                     >
@@ -336,9 +701,27 @@
             )}
 
             {showResetConfirm && (
-              <div className={`fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center ${isClosingResetPopup ? 'fade-out' : ''}`}>
-                <div className="bg-gray-800 p-6 rounded-lg w-11/12 max-w-sm shadow-lg">
-                  <p className="mb-4 text-gray-200">Are you sure you want to reset the restock list?</p>
+              <div
+                className={`fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center ${isClosingResetPopup ? 'fade-out' : 'fade-in'}`}
+                onClick={() => {
+                  setIsClosingResetPopup(true);
+                  setTimeout(() => {
+                    setShowResetConfirm(false);
+                    setIsClosingResetPopup(false);
+                  }, 300);
+                }}
+              >
+                <div
+                  className={`p-6 rounded-lg w-11/12 max-w-sm shadow-lg relative ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    onClick={toggleResetInfoPopup}
+                    className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-700 text-white flex items-center justify-center text-base font-semibold hover:bg-green-600 scale-transition"
+                  >
+                    ?
+                  </button>
+                  <p className={`mb-4 ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>Are you sure you want to reset the restock list?</p>
                   <div className="flex justify-end space-x-2">
                     <button
                       onClick={() => {
@@ -346,7 +729,7 @@
                         setTimeout(() => {
                           setShowResetConfirm(false);
                           setIsClosingResetPopup(false);
-                        }, 300); // Match fade-out animation duration
+                        }, 300);
                       }}
                       className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400 shadow-md"
                     >
@@ -364,9 +747,29 @@
             )}
 
             {showCollectPopup !== null && (
-              <div className={`fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center ${isClosingCollectPopup ? 'fade-out' : ''}`}>
-                <div className="bg-gray-800 p-6 rounded-lg w-11/12 max-w-sm shadow-lg">
-                  <p className="mb-4 text-gray-200">Mark {restockList[showCollectPopup].product} (x{restockList[showCollectPopup].quantity}) as collected?</p>
+              <div
+                className={`fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center ${isClosingCollectPopup ? 'fade-out' : 'fade-in'}`}
+                onClick={() => {
+                  setIsClosingCollectPopup(true);
+                  setTimeout(() => {
+                    setShowCollectPopup(null);
+                    setIsClosingCollectPopup(false);
+                  }, 300);
+                }}
+              >
+                <div
+                  className={`p-6 rounded-lg w-11/12 max-w-sm shadow-lg relative ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    onClick={toggleCollectInfoPopup}
+                    className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-700 text-white flex items-center justify-center text-base font-semibold hover:bg-green-600 scale-transition"
+                  >
+                    ?
+                  </button>
+                  <p className={`mb-4 ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
+                    Mark {restockList[showCollectPopup].product} (x{restockList[showCollectPopup].quantity}) as collected?
+                  </p>
                   <div className="flex justify-end space-x-2">
                     <button
                       onClick={() => {
@@ -374,7 +777,7 @@
                         setTimeout(() => {
                           setShowCollectPopup(null);
                           setIsClosingCollectPopup(false);
-                        }, 300); // Match fade-out animation duration
+                        }, 300);
                       }}
                       className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400 shadow-md"
                     >
@@ -388,6 +791,164 @@
                     </button>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {showInfoPopup && (
+              <div
+                className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingInfoPopup ? 'fade-out' : 'fade-in'}`}
+                onClick={toggleInfoPopup}
+              >
+                <div
+                  className={`p-6 rounded-lg w-11/12 max-w-sm shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <p className={`mb-4 ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
+                    Select products to add to the restock list. View and mark items as collected in the Restock List tab. Toggle dark/light mode for better visibility.
+                  </p>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={toggleInfoPopup}
+                      className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showProductInfoPopup && (
+              <div
+                className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingProductInfoPopup ? 'fade-out' : 'fade-in'}`}
+                onClick={toggleProductInfoPopup}
+              >
+                <div
+                  className={`p-6 rounded-lg w-11/12 max-w-sm shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <p className={`mb-4 ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
+                    Use the +/- buttons to adjust the quantity of the product. Confirm to add it to the restock list. If the product is already in the list, the quantity will be added to the existing amount.
+                  </p>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={toggleProductInfoPopup}
+                      className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showRestockInfoPopup && (
+              <div
+                className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingRestockInfoPopup ? 'fade-out' : 'fade-in'}`}
+                onClick={toggleRestockInfoPopup}
+              >
+                <div
+                  className={`p-6 rounded-lg w-11/12 max-w-sm shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <p className={`mb-4 ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
+                    View products in the restock list. Click 'View' to mark items as collected, or use 'Reset List' to clear all items. View the total number of items to plan restocking.
+                  </p>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={toggleRestockInfoPopup}
+                      className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showCollectInfoPopup && (
+              <div
+                className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingCollectInfoPopup ? 'fade-out' : 'fade-in'}`}
+                onClick={toggleCollectInfoPopup}
+              >
+                <div
+                  className={`p-6 rounded-lg w-11/12 max-w-sm shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <p className={`mb-4 ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
+                    Confirming marks the product as collected, removing it from the restock list. Undo an action within 5 seconds to restore the item.
+                  </p>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={toggleCollectInfoPopup}
+                      className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showResetInfoPopup && (
+              <div
+                className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingResetInfoPopup ? 'fade-out' : 'fade-in'}`}
+                onClick={toggleResetInfoPopup}
+              >
+                <div
+                  className={`p-6 rounded-lg w-11/12 max-w-sm shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <p className={`mb-4 ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
+                    Resetting clears all items from the restock list. Undo an action within 5 seconds to restore the list.
+                  </p>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={toggleResetInfoPopup}
+                      className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showSearchInfoPopup && (
+              <div
+                className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingSearchInfoPopup ? 'fade-out' : 'fade-in'}`}
+                onClick={toggleSearchInfoPopup}
+              >
+                <div
+                  className={`p-6 rounded-lg w-11/12 max-w-sm shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <p className={`mb-4 ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
+                    Search to quickly find products by name.
+                  </p>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={toggleSearchInfoPopup}
+                      className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showToast && (
+              <div className={`toast flex items-center space-x-4 fade-in`}>
+                <p className={`font-semibold`}>
+                  {lastAction?.type === 'collect' ? 'Item marked as collected.' : 'Restock list reset.'}
+                </p>
+                <button
+                  onClick={undoAction}
+                  className="px-3 py-1 bg-blue-700 text-white rounded-lg hover:bg-blue-600 shadow-md"
+                >
+                  Undo
+                </button>
               </div>
             )}
           </div>
