@@ -1,4 +1,43 @@
-<!DOCTYPE html>
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -8,6 +47,7 @@
   <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.22.5/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3.2.0/dist/email.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     .fade-down {
@@ -63,8 +103,13 @@
     .light {
       background: #a8a8a8; /* gray-100 */
     }
+    .app-container {
+      min-height: 100vh; /* Ensure background fills device screen */
+      display: flex;
+      flex-direction: column;
+    }
     .content {
-      min-height: calc(100vh + 10rem); /* Ensure scrollable beyond viewport */
+      flex: 1 0 auto; /* Allow content to grow and fill space */
       overflow-y: auto;
     }
     .grid-view {
@@ -162,7 +207,7 @@
     }
     .toast {
       position: fixed;
-      bottom: 4rem; /* Above footer */
+      bottom: 8rem; /* Above changelog and bug report section */
       left: 50%;
       transform: translateX(-50%);
       padding: 1rem;
@@ -194,17 +239,19 @@
       position: absolute;
       right: 0;
     }
-    .footer {
-      position: fixed;
-      bottom: 0;
+    .changelog-container {
+      flex-shrink: 0; /* Prevent changelog from shrinking */
       width: 100%;
-      background-color: transparent;
-      min-height: 3rem;
-      opacity: 0;
-      transition: opacity 0.3s ease;
+      max-width: 90vw;
+      margin: 0 auto;
+      padding: 1rem 0;
     }
-    .footer.visible {
-      opacity: 1;
+    .bug-report-container {
+      flex-shrink: 0; /* Prevent bug report section from shrinking */
+      width: 100%;
+      max-width: 90vw;
+      margin: 0 auto;
+      padding: 1rem 0;
     }
     .changelog-list {
       padding-left: 1.5rem;
@@ -219,6 +266,12 @@
     .changelog-list .removed {
       color: #ef4444; /* Red */
       list-style-type: "➖ ";
+    }
+    .changelog-close {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      z-index: 60;
     }
   </style>
 </head>
@@ -270,7 +323,7 @@
       const [searchQuery, setSearchQuery] = React.useState('');
       const [showToast, setShowToast] = React.useState(false);
       const [lastAction, setLastAction] = React.useState(null);
-      const contentRef = React.useRef(null);
+      const [bugReport, setBugReport] = React.useState('');
 
       React.useEffect(() => {
         localStorage.setItem('restockList', JSON.stringify(restockList));
@@ -290,19 +343,6 @@
           return () => clearTimeout(timer);
         }
       }, [showToast]);
-
-      React.useEffect(() => {
-        const handleScroll = () => {
-          const footer = document.querySelector('.footer');
-          if (window.scrollY > 100) {
-            footer.classList.add('visible');
-          } else {
-            footer.classList.remove('visible');
-          }
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-      }, []);
 
       const addToRestock = () => {
         const existingItem = restockList.find(item => item.product === currentProduct && !item.collected);
@@ -371,6 +411,40 @@
 
       const clearSearch = () => {
         setSearchQuery('');
+      };
+
+      const submitBugReport = () => {
+        if (!bugReport.trim()) {
+          setShowToast(true);
+          setLastAction({ type: 'bug-report-error', data: 'Bug report cannot be empty.' });
+          setTimeout(() => {
+            setShowToast(false);
+            setLastAction(null);
+          }, 5000);
+          return;
+        }
+
+        emailjs.send('service_637q56m', 'template_9hu2bkl', {
+          message: bugReport,
+          from_email: 'jacobfazer1@gmail.com',
+          to_email: 'jacobfazer1@gmail.com'
+        }, 'iPjziLz6-ui5TluiZ')
+          .then(() => {
+            setShowToast(true);
+            setLastAction({ type: 'bug-report-success', data: 'Bug report sent successfully.' });
+            setBugReport('');
+            setTimeout(() => {
+              setShowToast(false);
+              setLastAction(null);
+            }, 5000);
+          }, (error) => {
+            setShowToast(true);
+            setLastAction({ type: 'bug-report-error', data: 'Failed to send bug report.' });
+            setTimeout(() => {
+              setShowToast(false);
+              setLastAction(null);
+            }, 5000);
+          });
       };
 
       const toggleInfoPopup = () => {
@@ -472,7 +546,7 @@
       const totalItems = restockList.reduce((sum, item) => sum + item.quantity, 0);
 
       return (
-        <div className="min-h-screen p-4 relative" ref={contentRef}>
+        <div className="app-container">
           <header className="w-full max-w-[90vw] mx-auto mb-6">
             <div className="flex items-center justify-between mb-4">
               <h1 className={`text-[clamp(1.5rem,5vw,2rem)] font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Vending Machine Restock</h1>
@@ -645,19 +719,38 @@
                 </div>
               )}
             </div>
+            <div style={{ height: '100vh' }}></div> {/* Spacer to ensure content pushes changelog and bug report to bottom */}
           </main>
 
-          <footer className="footer">
-            <div className="w-full max-w-[90vw] mx-auto flex justify-between items-center text-[clamp(0.875rem,3vw,1rem)]">
+          <div className="changelog-container">
+            <button
+              onClick={toggleChangelogPopup}
+              className={`underline mb-4 ${isDarkMode ? 'text-gray-200 hover:text-blue-500' : 'text-gray-600 hover:text-blue-500'}`}
+            >
+              Changelog
+            </button>
+            <span className={isDarkMode ? 'text-gray-200' : 'text-gray-600'}>V2.2</span>
+          </div>
+
+          <div className="bug-report-container">
+            <h3 className={`text-[clamp(1.25rem,4vw,1.5rem)] font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Report a Bug</h3>
+            <textarea
+              value={bugReport}
+              onChange={(e) => setBugReport(e.target.value)}
+              placeholder="Describe the bug or issue..."
+              className={`w-full p-2 border rounded-lg mb-4 ${isDarkMode ? 'bg-gray-700 text-white placeholder-gray-400 border-gray-600' : 'bg-gray-200 text-gray-900 placeholder-gray-500 border-gray-300'}`}
+              rows="4"
+              aria-label="Bug report"
+            ></textarea>
+            <div className="flex justify-end">
               <button
-                onClick={toggleChangelogPopup}
-                className={`underline ${isDarkMode ? 'text-gray-200 hover:text-blue-500' : 'text-gray-600 hover:text-blue-500'}`}
+                onClick={submitBugReport}
+                className="px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
               >
-                Changelog
+                Submit
               </button>
-              <span className={isDarkMode ? 'text-gray-200' : 'text-gray-600'}>V2.1</span>
             </div>
-          </footer>
+          </div>
 
           {showPopup && (
             <div
@@ -845,7 +938,7 @@
                 onClick={(e) => e.stopPropagation()}
               >
                 <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
-                  Select products to add to the restock list. View and mark items as collected in the Restock List tab. Toggle dark/light mode for better visibility. The Change Log appears when scrolling down and infoms you of any updates.
+                  Select products to add to the restock list. View and mark items as collected in the Restock List tab. Toggle dark/light mode for better visibility. The Change Log and Bug Report sections appear at the bottom of the screen.
                 </p>
                 <div className="flex justify-end">
                   <button
@@ -985,13 +1078,20 @@
               onClick={toggleChangelogPopup}
             >
               <div
-                className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg border-2 border-gray-300 ${isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-gray-200 text-gray-900'}`}
+                className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg ${isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-gray-200 text-gray-900'}`}
                 onClick={(e) => e.stopPropagation()}
                 style={{ maxHeight: '70vh', overflowY: 'auto' }}
               >
-                <h3 className={`text-[clamp(1.25rem,4vw,1.5rem)] font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Changelog (V2.1)</h3>
+                <h3 className={`text-[clamp(1.25rem,4vw,1.5rem)] font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Changelog</h3>
                 <div className="changelog-list">
-                  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Added (+)</h4>
+                  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.2</h4>
+                  <ul>
+                    <li className="added">Made changelog scrollable with version history in descending order</li>
+                    <li className="added">Positioned changelog at the bottom of the screen without fade effects</li>
+                    <li className="added">Added bug report section for user feedback</li>
+                    <li className="added">Moved changelog close button to bottom-right of screen</li>
+                  </ul>
+                  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.1</h4>
                   <ul>
                     <li className="added">Search bar for faster product search</li>
                     <li className="added">Clear button for search bar</li>
@@ -1007,35 +1107,41 @@
                     <li className="added">Toast notification at top</li>
                     <li className="added">Footer visibility on scroll down</li>
                     <li className="added">Changelog with + and - sections</li>
-                  </ul>
-                  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>Removed (-)</h4>
-                  <ul>
                     <li className="removed">Developer credit from footer</li>
                   </ul>
-                </div>
-                <div className="flex justify-end mt-4">
-                  <button
-                    onClick={toggleChangelogPopup}
-                    className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                  >
-                    Close
-                  </button>
+                  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.0</h4>
+                  <ul>
+                    <li className="added">Initial release with core restock functionality</li>
+                    <li className="added">Product selection and quantity input</li>
+                    <li className="added">Basic dark/light mode support</li>
+                  </ul>
                 </div>
               </div>
+              <button
+                onClick={toggleChangelogPopup}
+                className={`changelog-close px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]`}
+              >
+                Close
+              </button>
             </div>
           )}
 
           {showToast && (
             <div className={`toast flex items-center space-x-4 fade-in`}>
               <p className={`font-semibold text-[clamp(0.875rem,3vw,1rem)]`}>
-                {lastAction?.type === 'collect' ? 'Item marked as collected.' : 'Restock list reset.'}
+                {lastAction?.type === 'collect' ? 'Item marked as collected.' : 
+                 lastAction?.type === 'reset' ? 'Restock list reset.' : 
+                 lastAction?.type === 'bug-report-success' ? lastAction.data : 
+                 lastAction?.type === 'bug-report-error' ? lastAction.data : ''}
               </p>
-              <button
-                onClick={undoAction}
-                className="px-3 py-1 bg-blue-700 text-white rounded-lg hover:bg-blue-600 shadow-md text-[clamp(0.75rem,3vw,0.875rem)]"
-              >
-                Undo
-              </button>
+              {lastAction?.type !== 'bug-report-success' && lastAction?.type !== 'bug-report-error' && (
+                <button
+                  onClick={undoAction}
+                  className="px-3 py-1 bg-blue-700 text-white rounded-lg hover:bg-blue-600 shadow-md text-[clamp(0.75rem,3vw,0.875rem)]"
+                >
+                  Undo
+                </button>
+              )}
             </div>
           )}
         </div>
