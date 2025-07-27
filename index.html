@@ -37,7 +37,47 @@
         }
         return gk_fileData[filename] || "";
         }
-        </script><!DOCTYPE html>
+        </script><script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+</script>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -207,7 +247,7 @@
     }
     .toast {
       position: fixed;
-      bottom: 8rem; /* Above changelog and bug report section */
+      bottom: 12rem; /* Adjusted to clear bug report and changelog sections */
       left: 50%;
       transform: translateX(-50%);
       padding: 1rem;
@@ -719,18 +759,7 @@
                 </div>
               )}
             </div>
-            <div style={{ height: '100vh' }}></div> {/* Spacer to ensure content pushes changelog and bug report to bottom */}
           </main>
-
-          <div className="changelog-container">
-            <button
-              onClick={toggleChangelogPopup}
-              className={`underline mb-4 ${isDarkMode ? 'text-gray-200 hover:text-blue-500' : 'text-gray-600 hover:text-blue-500'}`}
-            >
-              Changelog
-            </button>
-            <span className={isDarkMode ? 'text-gray-200' : 'text-gray-600'}>V2.2</span>
-          </div>
 
           <div className="bug-report-container">
             <h3 className={`text-[clamp(1.25rem,4vw,1.5rem)] font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Report a Bug</h3>
@@ -750,6 +779,16 @@
                 Submit
               </button>
             </div>
+          </div>
+
+          <div className="changelog-container">
+            <button
+              onClick={toggleChangelogPopup}
+              className={`underline mb-4 ${isDarkMode ? 'text-gray-200 hover:text-blue-500' : 'text-gray-600 hover:text-blue-500'}`}
+            >
+              Changelog
+            </button>
+            <span className={isDarkMode ? 'text-gray-200' : 'text-gray-600'}>V2.2</span>
           </div>
 
           {showPopup && (
@@ -938,7 +977,7 @@
                 onClick={(e) => e.stopPropagation()}
               >
                 <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
-                  Select products to add to the restock list. View and mark items as collected in the Restock List tab. Toggle dark/light mode for better visibility. The Change Log and Bug Report sections appear at the bottom of the screen.
+                  Select products to add to the restock list. View and mark items as collected in the Restock List tab. Toggle dark/light mode for better visibility. The Bug Report and Change Log sections appear at the bottom of the screen.
                 </p>
                 <div className="flex justify-end">
                   <button
@@ -1084,38 +1123,40 @@
               >
                 <h3 className={`text-[clamp(1.25rem,4vw,1.5rem)] font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Changelog</h3>
                 <div className="changelog-list">
-                  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.2</h4>
-                  <ul>
-                    <li className="added">Made changelog scrollable with version history in descending order</li>
-                    <li className="added">Positioned changelog at the bottom of the screen without fade effects</li>
-                    <li className="added">Added bug report section for user feedback</li>
-                    <li className="added">Moved changelog close button to bottom-right of screen</li>
-                  </ul>
-                  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.1</h4>
-                  <ul>
-                    <li className="added">Search bar for faster product search</li>
-                    <li className="added">Clear button for search bar</li>
-                    <li className="added">Total items count in Restock List</li>
-                    <li className="added">Undo option for 5 seconds after actions</li>
-                    <li className="added">Dark/light mode toggle with icons</li>
-                    <li className="added">Responsive grid layout</li>
-                    <li className="added">Footer with changelog link</li>
-                    <li className="added">Improved button sizes for mobile</li>
-                    <li className="added">Better image and text scaling</li>
-                    <li className="added">Updated help popups</li>
-                    <li className="added">Soft colors in light mode</li>
-                    <li className="added">Toast notification at top</li>
-                    <li className="added">Footer visibility on scroll down</li>
-                    <li className="added">Changelog with + and - sections</li>
-                    <li className="removed">Developer credit from footer</li>
-                  </ul>
-                  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.0</h4>
-                  <ul>
-                    <li className="added">Initial release with core restock functionality</li>
-                    <li className="added">Product selection and quantity input</li>
-                    <li className="added">Basic dark/light mode support</li>
-                  </ul>
-                </div>
+  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.2</h4>
+  <ul>
+    <li className="added">Made changelog scrollable with version history in descending order</li>
+    <li className="added">Positioned changelog at the bottom of the screen without fade effects</li>
+    <li className="added">Added bug report section for user feedback</li>
+    <li className="added">Moved changelog close button to bottom-right of screen</li>
+    <li className="added">Moved bug report section above changelog section</li>
+	<li className="removed">Removed large gap between products and changelog section</li>
+  </ul>
+  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.1</h4>
+  <ul>
+    <li className="added">Search bar for faster product search</li>
+    <li className="added">Clear button for search bar</li>
+    <li className="added">Total items count in Restock List</li>
+    <li className="added">Undo option for 5 seconds after actions</li>
+    <li className="added">Dark/light mode toggle with icons</li>
+    <li className="added">Responsive grid layout</li>
+    <li className="added">Footer with changelog link</li>
+    <li className="added">Improved button sizes for mobile</li>
+    <li className="added">Better image and text scaling</li>
+    <li className="added">Updated help popups</li>
+    <li className="added">Soft colors in light mode</li>
+    <li className="added">Toast notification at top</li>
+    <li className="added">Footer visibility on scroll down</li>
+    <li className="added">Changelog with + and - sections</li>
+    <li className="removed">Developer credit from footer</li>
+  </ul>
+  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.0</h4>
+  <ul>
+    <li className="added">Initial release with core restock functionality</li>
+    <li className="added">Product selection and quantity input</li>
+    <li className="added">Basic dark/light mode support</li>
+  </ul>
+</div>
               </div>
               <button
                 onClick={toggleChangelogPopup}
