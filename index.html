@@ -1123,38 +1123,60 @@
               >
                 <h3 className={`text-[clamp(1.25rem,4vw,1.5rem)] font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Changelog</h3>
                 <div className="changelog-list">
-  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.2</h4>
+  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.4</h4>
   <ul>
-    <li className="added">Made changelog scrollable with version history in descending order</li>
-    <li className="added">Positioned changelog at the bottom of the screen without fade effects</li>
-    <li className="added">Added bug report section for user feedback</li>
-    <li className="added">Moved changelog close button to bottom-right of screen</li>
-    <li className="added">Moved bug report section above changelog section</li>
-	<li className="removed">Removed large gap between products and changelog section</li>
+    <li className="added">Made text size adjust better for all screen sizes</li>
+    <li className="added">Improved product images to fit nicely on any device</li>
+    <li className="added">Added labels to buttons and inputs for easier use</li>
   </ul>
-  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.1</h4>
+  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.3</h4>
   <ul>
-    <li className="added">Search bar for faster product search</li>
-    <li className="added">Clear button for search bar</li>
-    <li className="added">Total items count in Restock List</li>
-    <li className="added">Undo option for 5 seconds after actions</li>
-    <li className="added">Dark/light mode toggle with icons</li>
-    <li className="added">Responsive grid layout</li>
-    <li className="added">Footer with changelog link</li>
-    <li className="added">Improved button sizes for mobile</li>
-    <li className="added">Better image and text scaling</li>
-    <li className="added">Updated help popups</li>
-    <li className="added">Soft colors in light mode</li>
-    <li className="added">Toast notification at top</li>
-    <li className="added">Footer visibility on scroll down</li>
-    <li className="added">Changelog with + and - sections</li>
-    <li className="removed">Developer credit from footer</li>
+    <li className="added">Moved toast message lower so it doesn't block the View button</li>
+    <li className="added">Fixed small layout issues in grid view on small screens</li>
+    <li className="added">Made toast messages appear and disappear more smoothly</li>
+  </ul>
+  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.2</h4>
+  <ul>
+    <li className="added">Added a scrollable changelog with newest updates first</li>
+    <li className="added">Placed changelog at the bottom of the screen</li>
+    <li className="added">Added a bug report section to send feedback</li>
+    <li className="added">Moved changelog close button to bottom-right</li>
+    <li className="added">Placed bug report section above changelog</li>
+    <li className="removed">Removed extra space between products and changelog</li>
+  </ul>
+  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.1.2</h4>
+  <ul>
+    <li className="added">Added undo button for removing or resetting items (shows for 5 seconds)</li>
+    <li className="added">Added toast messages to show when actions happen</li>
+    <li className="added">Added total item count in the restock list</li>
+  </ul>
+  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.1.1</h4>
+  <ul>
+    <li className="added">Added search bar with a clear button to find products fast</li>
+    <li className="added">Added help popups to explain how to use the app</li>
+    <li className="added">Used softer colors in light mode for easier viewing</li>
+  </ul>
+  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.1.0</h4>
+  <ul>
+    <li className="added">Added option to switch between grid and list view for products and restock list</li>
+    <li className="added">Made buttons bigger and easier to tap on phones</li>
+    <li className="added">Added dark/light mode switch with sun/moon icons</li>
+    <li className="added">Added a changelog link at the bottom</li>
+    <li className="added">Added smooth animations when removing items or opening popups</li>
+    <li className="removed">Removed developer name from the bottom</li>
   </ul>
   <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.0</h4>
   <ul>
-    <li className="added">Initial release with core restock functionality</li>
-    <li className="added">Product selection and quantity input</li>
-    <li className="added">Basic dark/light mode support</li>
+    <li className="added">Added main restock features to pick products and set quantities</li>
+    <li className="added">Added basic dark and light mode with saved settings</li>
+    <li className="added">Added restock list with options to mark items as collected or clear the list</li>
+  </ul>
+  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 1.0</h4>
+  <ul>
+    <li className="added">First app version with a simple product list</li>
+    <li className="added">Added product selection with basic images</li>
+    <li className="added">Added restock list saved on your device</li>
+    <li className="added">Added clean and simple design with basic styling</li>
   </ul>
 </div>
               </div>
