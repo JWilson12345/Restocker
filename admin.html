@@ -16,53 +16,46 @@
             min-height: 100vh;
             background: linear-gradient(135deg, #a8edea, #fed6e3);
             color: #333;
-            overflow: hidden; /* Prevent body overflow */
         }
 
         .game-container {
             background-color: #fff;
             border-radius: 1.5rem;
             box-shadow: 0 0.625rem 1.875rem rgba(0, 0, 0, 0.15);
-            padding: 1.25rem;
-            width: 90%;
+            padding: 1.875rem;
+            width: 100%;
             max-width: 26.25rem;
-            max-height: 90vh; /* Fit within 90% of viewport height */
-            overflow-y: auto; /* Allow internal scrolling if needed, though minimized */
             text-align: center;
             position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            overflow: hidden;
         }
 
         h1 {
             color: #4a4a4a;
             font-weight: 700;
-            margin-bottom: 1rem;
-            font-size: clamp(1.25rem, 5vw, 2rem); /* Responsive font size */
+            margin-bottom: 1.5625rem;
+            font-size: 2rem;
             letter-spacing: 0.0625rem;
         }
 
         #board {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            grid-gap: 0.5rem;
-            margin-bottom: 1rem;
-            padding: 0.5rem;
+            grid-gap: 0.75rem;
+            margin-bottom: 1.875rem;
+            padding: 0.75rem;
             background-color: #f9f9f9;
             border-radius: 0.9375rem;
             box-shadow: inset 0 0.125rem 0.625rem rgba(0, 0, 0, 0.05);
-            flex-shrink: 0; /* Prevent shrinking */
         }
 
         .square {
-            width: 100%; /* Use percentage for responsiveness */
-            height: 0;
-            padding-bottom: 100%; /* Maintain square aspect ratio */
+            width: 7.5rem;
+            height: 7.5rem;
             background-color: #fff;
             border: 0.1875rem solid #e0e0e0;
             border-radius: 0.9375rem;
-            font-size: clamp(1.5rem, 8vw, 3rem); /* Scale font with screen */
+            font-size: 3rem;
             font-weight: 700;
             display: flex;
             justify-content: center;
@@ -70,7 +63,6 @@
             cursor: pointer;
             transition: all 0.2s ease-in-out;
             box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.05);
-            position: relative; /* For aspect ratio */
         }
 
         .square:hover {
@@ -96,9 +88,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1rem;
+            margin-bottom: 1.25rem;
             width: 100%;
-            flex-shrink: 0; /* Prevent shrinking */
         }
 
         .player-group {
@@ -110,10 +101,10 @@
         .player {
             padding: 0.75rem 1.5rem;
             border-radius: 3.125rem;
-            font-size: clamp(0.875rem, 4vw, 1.25rem);
+            font-size: 1.25rem;
             font-weight: 500;
             transition: all 0.3s ease;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.5rem;
             position: relative;
             box-shadow: 0 0.125rem 0.375rem rgba(0, 0, 0, 0.1);
         }
@@ -145,7 +136,7 @@
         }
 
         .score {
-            font-size: clamp(0.75rem, 3vw, 1rem);
+            font-size: 1rem;
             color: #555;
             font-weight: 500;
         }
@@ -156,7 +147,7 @@
             border: none;
             border-radius: 1.25rem;
             color: #ffffff;
-            font-size: clamp(0.875rem, 3vw, 1rem);
+            font-size: 1rem;
             cursor: pointer;
             transition: all 0.3s ease;
             display: none;
@@ -174,14 +165,11 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background-color: rgba(255, 255, 255, 0.95);
-            padding: clamp(0.75rem, 2vw, 1.5625rem) clamp(1rem, 3vw, 2.5rem);
+            padding: 1.5625rem 2.5rem;
             border-radius: 0.9375rem;
             box-shadow: 0 0.625rem 1.875rem rgba(0, 0, 0, 0.2);
             text-align: center;
             z-index: 1000;
-            max-width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
             animation: fadeIn 0.4s ease-in-out, scaleIn 0.4s ease-in-out;
         }
 
@@ -190,19 +178,19 @@
         }
 
         .toast-message {
-            font-size: clamp(0.875rem, 4vw, 1.25rem);
+            font-size: 1.25rem;
             color: #333;
-            margin-bottom: clamp(0.75rem, 2vw, 1.25rem);
+            margin-bottom: 1.25rem;
             font-weight: 500;
         }
 
         #toast-next-button {
-            padding: clamp(0.5rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.875rem);
+            padding: 0.75rem 1.875rem;
             background: linear-gradient(135deg, #34d399, #10b981);
             border: none;
             border-radius: 1.875rem;
             color: #fff;
-            font-size: clamp(0.75rem, 3vw, 1rem);
+            font-size: 1rem;
             cursor: pointer;
             transition: all 0.3s ease;
         }
@@ -225,95 +213,49 @@
         @media (max-width: 768px) {
             .game-container {
                 max-width: 90%;
-                padding: 0.75rem;
-                max-height: 95vh;
+                padding: 1.25rem;
             }
 
             h1 {
-                font-size: clamp(1rem, 5vw, 1.5rem);
-                margin-bottom: 0.75rem;
+                font-size: 1.5rem;
+                margin-bottom: 1.25rem;
             }
 
             #board {
-                grid-gap: 0.375rem;
-                margin-bottom: 0.75rem;
-                padding: 0.375rem;
-            }
-
-            .square {
-                border-width: 0.125rem;
-                font-size: clamp(1.25rem, 7vw, 2rem);
-            }
-
-            .player {
-                padding: 0.375rem 0.875rem;
-                font-size: clamp(0.75rem, 4vw, 1rem);
-                margin-bottom: 0.125rem;
-            }
-
-            .score {
-                font-size: clamp(0.625rem, 3vw, 0.875rem);
-            }
-
-            .toast {
-                padding: clamp(0.5rem, 2vw, 1rem) clamp(0.75rem, 2vw, 1.5rem);
-                max-width: 85%;
-                max-height: 70vh;
-            }
-
-            .toast-message {
-                font-size: clamp(0.75rem, 4vw, 1rem);
-                margin-bottom: clamp(0.5rem, 2vw, 1rem);
-            }
-
-            #toast-next-button {
-                padding: clamp(0.375rem, 2vw, 0.5rem) clamp(0.75rem, 2vw, 1.5rem);
-                font-size: clamp(0.625rem, 3vw, 0.875rem);
-            }
-        }
-
-        @media (max-width: 480px) {
-            .game-container {
+                grid-gap: 0.5rem;
+                margin-bottom: 1.25rem;
                 padding: 0.5rem;
-                max-height: 98vh;
-            }
-
-            h1 {
-                font-size: clamp(0.875rem, 5vw, 1.25rem);
-            }
-
-            #board {
-                grid-gap: 0.25rem;
-                margin-bottom: 0.5rem;
-                padding: 0.25rem;
             }
 
             .square {
-                font-size: clamp(1rem, 6vw, 1.75rem);
+                width: 5.5rem;
+                height: 5.5rem;
+                font-size: 2rem;
+                border-width: 0.125rem;
             }
 
             .player {
-                padding: 0.25rem 0.625rem;
-                font-size: clamp(0.625rem, 4vw, 0.875rem);
+                padding: 0.5rem 1rem;
+                font-size: 1rem;
+                margin-bottom: 0.25rem;
             }
 
             .score {
-                font-size: clamp(0.5rem, 3vw, 0.75rem);
+                font-size: 0.875rem;
             }
 
             .toast {
-                padding: clamp(0.375rem, 2vw, 0.75rem) clamp(0.5rem, 2vw, 1rem);
-                max-width: 80%;
-                max-height: 65vh;
+                padding: 1rem 1.5rem;
             }
 
             .toast-message {
-                font-size: clamp(0.625rem, 4vw, 0.875rem);
+                font-size: 1rem;
+                margin-bottom: 1rem;
             }
 
             #toast-next-button {
-                padding: clamp(0.25rem, 2vw, 0.375rem) clamp(0.5rem, 2vw, 1rem);
-                font-size: clamp(0.5rem, 3vw, 0.75rem);
+                padding: 0.5rem 1.5rem;
+                font-size: 0.875rem;
             }
         }
     </style>
