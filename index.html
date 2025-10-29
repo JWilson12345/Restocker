@@ -1,1368 +1,912 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vending Machine Restock</title>
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Phone Order Manager (v6)</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React & Babel (single-file dev) -->
   <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.22.5/babel.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3.2.0/dist/email.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- jsPDF (for PDF receipts) -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
   <style>
-    .fade-down {
-      animation: fadeDown 0.5s ease-out forwards;
-    }
-    @keyframes fadeDown {
-      from {
-        opacity: 1;
-        transform: translateY(0);
-      }
-      to {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-    }
-    .slide-up {
-      animation: slideUp 0.5s ease-out forwards;
-    }
-    @keyframes slideUp {
-      from {
-        transform: translateY(0);
-      }
-      to {
-        transform: translateY(-100%);
-      }
-    }
-    .fade-out {
-      animation: fadeOut 0.3s ease-out forwards;
-    }
-    @keyframes fadeOut {
-      from { opacity: 1; }
-      to { opacity: 0; }
-    }
-    .fade-in {
-      animation: fadeIn 0.3s ease-in forwards;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    .scale-transition {
-      transition: transform 0.2s ease;
-    }
-    .scale-transition:hover {
-      transform: scale(1.1);
-    }
-    .slide-grid {
-      transition: transform 0.5s ease-out;
-    }
-    .dark {
-      background: linear-gradient(135deg, #1a202c, #2d3748);
-    }
-    .light {
-      background: #a8a8a8; /* gray-100 */
-    }
-    .app-container {
-      min-height: 100vh; /* Ensure background fills device screen */
-      display: flex;
-      flex-direction: column;
-    }
-    .content {
-      flex: 1 0 auto; /* Allow content to grow and fill space */
-      overflow-y: auto;
-    }
-    .grid-view {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-      gap: 0.75rem;
-    }
-    .grid-view > div {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      padding: 1rem;
-      border-radius: 0.5rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
-    .dark .grid-view > div {
-      background-color: #2d3748;
-    }
-    .light .grid-view > div {
-      background-color: #efefef;
-    }
-    .dark .grid-view > div:hover {
-      background-color: #4a5568;
-    }
-    .light .grid-view > div:hover {
-      background-color: #dadada;
-    }
-    .grid-view img {
-      width: 20vw;
-      height: 20vw;
-      max-width: 5rem;
-      max-height: 5rem;
-      object-fit: contain;
-    }
-    .grid-view span {
-      font-size: clamp(0.75rem, 3vw, 0.875rem);
-      margin-top: 0.5rem;
-    }
-    .dark .grid-view span {
-      color: #ffffff;
-    }
-    .light .grid-view span {
-      color: #111827;
-    }
-    .restock-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-      gap: 0.75rem;
-    }
-    .restock-grid > div {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      padding: 1rem;
-      padding-bottom: 2.5rem;
-      border-radius: 0.5rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-      min-height: 10rem;
-      transition: transform 0.5s ease-out;
-    }
-    .dark .restock-grid > div {
-      background-color: #2d3748;
-    }
-    .light .restock-grid > div {
-      background-color: #e5e7eb;
-    }
-    .dark .restock-grid > div:hover {
-      background-color: #4a5568;
-    }
-    .light .restock-grid > div:hover {
-      background-color: #d1d5db;
-    }
-    .restock-grid img {
-      width: 20vw;
-      height: 20vw;
-      max-width: 5rem;
-      max-height: 5rem;
-      object-fit: contain;
-    }
-    .restock-grid span {
-      font-size: clamp(0.75rem, 3vw, 0.875rem);
-      margin-top: 0.5rem;
-    }
-    .dark .restock-grid span {
-      color: #ffffff;
-    }
-    .light .restock-grid span {
-      color: #111827;
-    }
-    .restock-grid button {
-      margin-top: 0.5rem;
-      font-size: clamp(0.75rem, 3vw, 0.875rem);
-    }
-    .toast {
-      position: fixed;
-      bottom: 10rem; /* Adjusted to move toast down slightly */
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 1rem;
-      border-radius: 0.5rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-      z-index: 50;
-      max-width: 90vw;
-    }
-    .dark .toast {
-      background-color: #2d3748;
-      color: #ffffff;
-    }
-    .light .toast {
-      background-color: #e5e7eb;
-      color: #111827;
-    }
-    .search-container {
-      position: relative;
-      display: flex;
-      align-items: center;
-      width: 100%;
-      margin: 1rem 0;
-    }
-    .search-clear {
-      position: absolute;
-      right: 3rem;
-    }
-    .search-info {
-      position: absolute;
-      right: 0;
-    }
-    .changelog-container {
-      flex-shrink: 0; /* Prevent changelog from shrinking */
-      width: 100%;
-      max-width: 90vw;
-      margin: 0 auto;
-      padding: 1rem 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .bug-report-container {
-      flex-shrink: 0; /* Prevent bug report section from shrinking */
-      width: 100%;
-      max-width: 90vw;
-      margin: 0 auto;
-      padding: 1rem 0;
-    }
-    .changelog-list {
-      padding-left: 1.5rem;
-    }
-    .changelog-list > li {
-      margin-bottom: 0.5rem;
-    }
-    .changelog-list .added {
-      color: #10b981; /* Emerald green */
-      list-style-type: "➕ ";
-    }
-    .changelog-list .removed {
-      color: #ef4444; /* Red */
-      list-style-type: "➖ ";
-    }
-    .changelog-close {
-      position: fixed;
-      bottom: 1rem;
-      right: 1rem;
-      z-index: 60;
-    }
-    .keypad-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-    .keypad-button {
-      padding: 1rem;
-      font-size: clamp(1rem, 3vw, 1.125rem);
-      border-radius: 0.5rem;
-      transition: transform 0.2s ease;
-    }
-    .dark .keypad-button {
-      background-color: #4a5568;
-      color: #ffffff;
-    }
-    .light .keypad-button {
-      background-color: #d1d5db;
-      color: #111827;
-    }
-    .keypad-button:hover {
-      transform: scale(1.05);
-    }
-    .code-display {
-      font-family: monospace;
-      letter-spacing: 0.5rem;
-      text-align: center;
-    }
+    .fade-down { animation: fadeDown .45s ease-out forwards; }
+    @keyframes fadeDown { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(18px); } }
+    .slide-up { animation: slideUp .45s ease-out forwards; }
+    @keyframes slideUp { from { transform: translateY(0); } to { transform: translateY(-100%); } }
+    .fade-in { animation: fadeIn .28s ease-in forwards; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .scale-transition { transition: transform .18s ease; }
+    .scale-transition:hover { transform: scale(1.04); }
+    .card-shadow { box-shadow: 0 8px 18px -8px rgba(0,0,0,0.35); }
+    .max-w-xl { max-width: 36rem; }
+    .max-w-3xl { max-width: 48rem; }
+    .filter-badge { padding: .15rem .5rem; border-radius: .45rem; font-size: .8rem; }
   </style>
 </head>
-<body class="dark">
-  <div id="root"></div>
-  <script type="text/babel">
-    const products = [
-      "Coke gray", "Coke red", "Coke redder", "Fanta blue", "Fanta red",
-      "Fanta orange", "Fanta yellow", "Viminto purple", "Dr Pepper", "Pepsi black",
-      "Lemmon green", "Dog brown", "D&b purple", "Tango colour", "Tango purple",
-      "Tango green", "Tango orange", "Iron bru", "Water"
-    ];
+<body class="dark bg-gradient-to-br from-slate-800 to-slate-700 min-h-screen">
 
-    const App = () => {
-      const [restockList, setRestockList] = React.useState(() => {
-        const saved = localStorage.getItem('restockList');
-        return saved ? JSON.parse(saved) : [];
-      });
-      const [showPopup, setShowPopup] = React.useState(false);
-      const [currentProduct, setCurrentProduct] = React.useState(null);
-      const [quantity, setQuantity] = React.useState(1);
-      const [showResetConfirm, setShowResetConfirm] = React.useState(false);
-      const [showRestockList, setShowRestockList] = React.useState(false);
-      const [showCollectPopup, setShowCollectPopup] = React.useState(null);
-      const [showInfoPopup, setShowInfoPopup] = React.useState(false);
-      const [showProductInfoPopup, setShowProductInfoPopup] = React.useState(false);
-      const [showRestockInfoPopup, setShowRestockInfoPopup] = React.useState(false);
-      const [showCollectInfoPopup, setShowCollectInfoPopup] = React.useState(false);
-      const [showResetInfoPopup, setShowResetInfoPopup] = React.useState(false);
-      const [showSearchInfoPopup, setShowSearchInfoPopup] = React.useState(false);
-      const [showChangelogPopup, setShowChangelogPopup] = React.useState(false);
-      const [showAddProductPopup, setShowAddProductPopup] = React.useState(false);
-      const [showAdminPopup, setShowAdminPopup] = React.useState(false);
-      const [productRequest, setProductRequest] = React.useState('');
-      const [adminCode, setAdminCode] = React.useState('');
-      const [fadingItemIndex, setFadingItemIndex] = React.useState(null);
-      const [slidingItems, setSlidingItems] = React.useState([]);
-      const [isClosingPopup, setIsClosingPopup] = React.useState(false);
-      const [isClosingCollectPopup, setIsClosingCollectPopup] = React.useState(false);
-      const [isClosingResetPopup, setIsClosingResetPopup] = React.useState(false);
-      const [isClosingInfoPopup, setIsClosingInfoPopup] = React.useState(false);
-      const [isClosingProductInfoPopup, setIsClosingProductInfoPopup] = React.useState(false);
-      const [isClosingRestockInfoPopup, setIsClosingRestockInfoPopup] = React.useState(false);
-      const [isClosingCollectInfoPopup, setIsClosingCollectInfoPopup] = React.useState(false);
-      const [isClosingResetInfoPopup, setIsClosingResetInfoPopup] = React.useState(false);
-      const [isClosingSearchInfoPopup, setIsClosingSearchInfoPopup] = React.useState(false);
-      const [isClosingChangelogPopup, setIsClosingChangelogPopup] = React.useState(false);
-      const [isClosingAddProductPopup, setIsClosingAddProductPopup] = React.useState(false);
-      const [isClosingAdminPopup, setIsClosingAdminPopup] = React.useState(false);
-      const [isGridView, setIsGridView] = React.useState(false);
-      const [isDarkMode, setIsDarkMode] = React.useState(() => {
-        const saved = localStorage.getItem('isDarkMode');
-        return saved !== null ? JSON.parse(saved) : true;
-      });
-      const [searchQuery, setSearchQuery] = React.useState('');
-      const [showToast, setShowToast] = React.useState(false);
-      const [lastAction, setLastAction] = React.useState(null);
-      const [bugReport, setBugReport] = React.useState('');
+<div id="root"></div>
 
-      React.useEffect(() => {
-        localStorage.setItem('restockList', JSON.stringify(restockList));
-      }, [restockList]);
+<script type="text/babel">
+const { useState, useEffect, useMemo } = React;
 
-      React.useEffect(() => {
-        localStorage.setItem('isDarkMode', JSON.stringify(isDarkMode));
-        document.body.className = isDarkMode ? 'dark' : 'light';
-      }, [isDarkMode]);
+/* ---------- Helpers ---------- */
+const formatCurrency = (pence) => '£' + (pence/100).toFixed(2);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
 
-      React.useEffect(() => {
-        if (showToast) {
-          const timer = setTimeout(() => {
-            setShowToast(false);
-            setLastAction(null);
-          }, 5000);
-          return () => clearTimeout(timer);
-        }
-      }, [showToast]);
+/* ---------- Default products (temporary) ---------- */
+const DEFAULT_PRODUCTS = [
+  { id: 'cod', name: 'Cod & Chips', pricePence: 750, tags: ['mains'] },
+  { id: 'sausage', name: 'Sausage & Chips', pricePence: 650, tags: ['mains'] },
+  { id: 'scampi', name: 'Scampi & Chips', pricePence: 800, tags: ['mains'] },
+  { id: 'cheesy', name: 'Cheesy Chips', pricePence: 450, tags: ['sides'] },
+  { id: 'curry', name: 'Curry Sauce', pricePence: 120, tags: ['extras'] },
+  { id: 'cola', name: 'Coke (330ml)', pricePence: 150, tags: ['drinks'] },
+  { id: 'pepsi', name: 'Pepsi (330ml)', pricePence: 150, tags: ['drinks'] },
+  { id: 'water', name: 'Bottled Water', pricePence: 120, tags: ['drinks'] },
+];
 
-      const addToRestock = () => {
-        const existingItem = restockList.find(item => item.product === currentProduct && !item.collected);
-        if (existingItem) {
-          const updatedList = restockList.map(item =>
-            item.product === currentProduct && !item.collected
-              ? { ...item, quantity: item.quantity + quantity }
-              : item
-          );
-          setRestockList(updatedList);
-        } else {
-          setRestockList([...restockList, { product: currentProduct, quantity, collected: false }]);
-        }
-        setIsClosingPopup(true);
-        setTimeout(() => {
-          setShowPopup(false);
-          setIsClosingPopup(false);
-          setQuantity(1);
-        }, 300);
-      };
+/* ---------- Local Storage Keys ---------- */
+const LS = {
+  ORDERS: 'phone_orders_v6',
+  THEME: 'phone_orders_theme_v6',
+  PRODUCTS: 'phone_orders_products_v6',
+};
 
-      const confirmCollected = (index) => {
-        setFadingItemIndex(index);
-        const item = restockList[index];
-        setLastAction({ type: 'collect', data: { ...item, index } });
-        setShowToast(true);
-        const itemsToSlide = isGridView ? [] : restockList.filter((item, i) => i > index && !item.collected).map((_, i) => index + i + 1);
-        setSlidingItems(itemsToSlide);
-        setTimeout(() => {
-          const updatedList = [...restockList];
-          updatedList[index].collected = true;
-          setRestockList(updatedList.filter(item => !item.collected));
-          setFadingItemIndex(null);
-          setSlidingItems([]);
-        }, 500);
-        setIsClosingCollectPopup(true);
-        setTimeout(() => {
-          setShowCollectPopup(null);
-          setIsClosingCollectPopup(false);
-        }, 300);
-      };
+/* ---------- Storage helpers ---------- */
+const load = (key, fallback) => {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch(e) { return fallback; }
+};
+const save = (key, data) => { try { localStorage.setItem(key, JSON.stringify(data)); } catch(e){} };
 
-      const resetList = () => {
-        setLastAction({ type: 'reset', data: [...restockList] });
-        setShowToast(true);
-        setRestockList([]);
-        setIsClosingResetPopup(true);
-        setTimeout(() => {
-          setShowResetConfirm(false);
-          setIsClosingResetPopup(false);
-        }, 300);
-      };
+/* ---------- UI components ---------- */
+function Toast({ open, text, actionLabel, onAction }) {
+  if (!open) return null;
+  return (
+    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+      <div className="px-4 py-3 rounded-xl card-shadow bg-slate-800 text-slate-100 flex items-center gap-4">
+        <div>{text}</div>
+        {onAction && <button onClick={onAction} className="px-3 py-1 rounded bg-slate-700 text-sm">{actionLabel || 'Undo'}</button>}
+      </div>
+    </div>
+  );
+}
 
-      const undoAction = () => {
-        if (lastAction?.type === 'collect') {
-          const { data } = lastAction;
-          const updatedList = [...restockList];
-          updatedList.splice(data.index, 0, { ...data, collected: false });
-          setRestockList(updatedList);
-        } else if (lastAction?.type === 'reset') {
-          setRestockList(lastAction.data);
-        }
-        setShowToast(false);
-        setLastAction(null);
-      };
-
-      const clearSearch = () => {
-        setSearchQuery('');
-      };
-
-      const submitBugReport = () => {
-        if (!bugReport.trim()) {
-          setShowToast(true);
-          setLastAction({ type: 'bug-report-error', data: 'Bug report cannot be empty.' });
-          setTimeout(() => {
-            setShowToast(false);
-            setLastAction(null);
-          }, 5000);
-          return;
-        }
-
-        emailjs.send('service_637q56m', 'template_9hu2bkl', {
-          message: bugReport,
-          from_email: 'jacobfazer1@gmail.com',
-          to_email: 'jacobfazer1@gmail.com'
-        }, 'iPjziLz6-ui5TluiZ')
-          .then(() => {
-            setShowToast(true);
-            setLastAction({ type: 'bug-report-success', data: 'Bug report sent successfully.' });
-            setBugReport('');
-            setTimeout(() => {
-              setShowToast(false);
-              setLastAction(null);
-            }, 5000);
-          }, (error) => {
-            setShowToast(true);
-            setLastAction({ type: 'bug-report-error', data: 'Failed to send bug report.' });
-            setTimeout(() => {
-              setShowToast(false);
-              setLastAction(null);
-            }, 5000);
-          });
-      };
-
-      const submitProductRequest = () => {
-        if (!productRequest.trim()) {
-          setShowToast(true);
-          setLastAction({ type: 'product-request-error', data: 'Product request cannot be empty.' });
-          setTimeout(() => {
-            setShowToast(false);
-            setLastAction(null);
-          }, 5000);
-          return;
-        }
-
-        emailjs.send('service_637q56m', 'template_9hu2bkl', {
-          message: `New product request: ${productRequest}`,
-          from_email: 'jacobfazer1@gmail.com',
-          to_email: 'jacobfazer1@gmail.com'
-        }, 'iPjziLz6-ui5TluiZ')
-          .then(() => {
-            setShowToast(true);
-            setLastAction({ type: 'product-request-success', data: 'Product request sent successfully.' });
-            setProductRequest('');
-            setTimeout(() => {
-              setShowToast(false);
-              setLastAction(null);
-            }, 5000);
-            setIsClosingAddProductPopup(true);
-            setTimeout(() => {
-              setShowAddProductPopup(false);
-              setIsClosingAddProductPopup(false);
-            }, 300);
-          }, (error) => {
-            setShowToast(true);
-            setLastAction({ type: 'product-request-error', data: 'Failed to send product request.' });
-            setTimeout(() => {
-              setShowToast(false);
-              setLastAction(null);
-            }, 5000);
-          });
-      };
-
-      const handleKeypadInput = (digit) => {
-        if (adminCode.length < 4) {
-          setAdminCode(adminCode + digit);
-        }
-      };
-
-      const clearAdminCode = () => {
-        setAdminCode('');
-      };
-
-      const submitAdminCode = () => {
-        const correctCode = '1004'; // Hardcoded for simplicity
-        if (adminCode === correctCode) {
-          window.location.href = 'admin.html';
-        } else {
-          setShowToast(true);
-          setLastAction({ type: 'admin-code-error', data: 'Incorrect code.' });
-          setAdminCode('');
-          setTimeout(() => {
-            setShowToast(false);
-            setLastAction(null);
-          }, 5000);
-        }
-      };
-
-      const toggleInfoPopup = () => {
-        if (showInfoPopup) {
-          setIsClosingInfoPopup(true);
-          setTimeout(() => {
-            setShowInfoPopup(false);
-            setIsClosingInfoPopup(false);
-          }, 300);
-        } else {
-          setShowInfoPopup(true);
-        }
-      };
-
-      const toggleProductInfoPopup = () => {
-        if (showProductInfoPopup) {
-          setIsClosingProductInfoPopup(true);
-          setTimeout(() => {
-            setShowProductInfoPopup(false);
-            setIsClosingProductInfoPopup(false);
-          }, 300);
-        } else {
-          setShowProductInfoPopup(true);
-        }
-      };
-
-      const toggleRestockInfoPopup = () => {
-        if (showRestockInfoPopup) {
-          setIsClosingRestockInfoPopup(true);
-          setTimeout(() => {
-            setShowRestockInfoPopup(false);
-            setIsClosingRestockInfoPopup(false);
-          }, 300);
-        } else {
-          setShowRestockInfoPopup(true);
-        }
-      };
-
-      const toggleCollectInfoPopup = () => {
-        if (showCollectInfoPopup) {
-          setIsClosingCollectInfoPopup(true);
-          setTimeout(() => {
-            setShowCollectInfoPopup(false);
-            setIsClosingCollectInfoPopup(false);
-          }, 300);
-        } else {
-          setShowCollectInfoPopup(true);
-        }
-      };
-
-      const toggleResetInfoPopup = () => {
-        if (showResetInfoPopup) {
-          setIsClosingResetInfoPopup(true);
-          setTimeout(() => {
-            setShowResetInfoPopup(false);
-            setIsClosingResetInfoPopup(false);
-          }, 300);
-        } else {
-          setShowResetInfoPopup(true);
-        }
-      };
-
-      const toggleSearchInfoPopup = () => {
-        if (showSearchInfoPopup) {
-          setIsClosingSearchInfoPopup(true);
-          setTimeout(() => {
-            setShowSearchInfoPopup(false);
-            setIsClosingSearchInfoPopup(false);
-          }, 300);
-        } else {
-          setShowSearchInfoPopup(true);
-        }
-      };
-
-      const toggleChangelogPopup = () => {
-        if (showChangelogPopup) {
-          setIsClosingChangelogPopup(true);
-          setTimeout(() => {
-            setShowChangelogPopup(false);
-            setIsClosingChangelogPopup(false);
-          }, 300);
-        } else {
-          setShowChangelogPopup(true);
-        }
-      };
-
-      const toggleAddProductPopup = () => {
-        if (showAddProductPopup) {
-          setIsClosingAddProductPopup(true);
-          setTimeout(() => {
-            setShowAddProductPopup(false);
-            setIsClosingAddProductPopup(false);
-          }, 300);
-        } else {
-          setShowAddProductPopup(true);
-        }
-      };
-
-      const toggleAdminPopup = () => {
-        if (showAdminPopup) {
-          setIsClosingAdminPopup(true);
-          setTimeout(() => {
-            setShowAdminPopup(false);
-            setIsClosingAdminPopup(false);
-            setAdminCode('');
-          }, 300);
-        } else {
-          setShowAdminPopup(true);
-        }
-      };
-
-      const toggleView = () => {
-        setIsGridView(!isGridView);
-      };
-
-      const toggleTheme = () => {
-        setIsDarkMode(!isDarkMode);
-      };
-
-      const filteredProducts = products.filter(product =>
-        product.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-
-      const totalItems = restockList.reduce((sum, item) => sum + item.quantity, 0);
-
-      return (
-        <div className="app-container">
-          <header className="w-full max-w-[90vw] mx-auto mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h1 className={`text-[clamp(1.5rem,5vw,2rem)] font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Vending Machine Restock</h1>
-              <div className="flex space-x-2">
-                <button
-                  onClick={toggleInfoPopup}
-                  className="w-10 h-10 rounded-full bg-green-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-green-600 scale-transition"
-                  aria-label="Info"
-                >
-                  ?
-                </button>
-                <button
-                  onClick={toggleView}
-                  className="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-blue-600 scale-transition"
-                  aria-label="Toggle view"
-                >
-                  <i className={`fas ${isGridView ? 'fa-bars' : 'fa-th'}`}></i>
-                </button>
-                <button
-                  onClick={toggleTheme}
-                  className="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-blue-600 scale-transition"
-                  aria-label="Toggle theme"
-                >
-                  <i className={`fas ${isDarkMode ? 'fa-moon' : 'fa-sun'}`}></i>
-                </button>
-              </div>
-            </div>
-            <div className="flex justify-between mb-4 gap-2">
-              <button
-                onClick={() => setShowRestockList(false)}
-                className={`flex-1 py-2 rounded-lg font-semibold text-white shadow-md hover:bg-gray-600 ${
-                  !showRestockList ? (isDarkMode ? 'bg-blue-700' : 'bg-blue-600') : (isDarkMode ? 'bg-gray-700' : 'bg-gray-400')
-                }`}
-              >
-                Add Products
-              </button>
-              <button
-                onClick={() => setShowRestockList(true)}
-                className={`flex-1 py-2 rounded-lg font-semibold text-white shadow-md hover:bg-gray-600 ${
-                  showRestockList ? (isDarkMode ? 'bg-blue-700' : 'bg-blue-600') : (isDarkMode ? 'bg-gray-700' : 'bg-gray-400')
-                }`}
-              >
-                Restock List
-              </button>
-            </div>
-          </header>
-
-          <main className="content">
-            <div className="w-full max-w-[90vw] mx-auto">
-              {showRestockList ? (
-                <div>
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center">
-                      <h2 className={`text-[clamp(1.25rem,4vw,1.5rem)] font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Restock List</h2>
-                      <button
-                        onClick={toggleRestockInfoPopup}
-                        className="ml-3 w-10 h-10 rounded-full bg-green-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-green-600 scale-transition"
-                        aria-label="Restock info"
-                      >
-                        ?
-                      </button>
-                    </div>
-                    <button
-                      onClick={() => setShowResetConfirm(true)}
-                      className="px-4 py-2 bg-red-700 text-white rounded-lg shadow-md hover:bg-red-600 text-[clamp(0.875rem,3vw,1rem)]"
-                    >
-                      Reset List
-                    </button>
-                  </div>
-                  <p className={`text-[clamp(1rem,4vw,1.125rem)] font-semibold mb-4 ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                    Total Items: {totalItems}
-                  </p>
-                  {restockList.length === 0 ? (
-                    <p className={`text-center ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>No items in restock list.</p>
-                  ) : (
-                    <div className={isGridView ? 'restock-grid' : 'space-y-3'}>
-                      {restockList.filter(item => !item.collected).map((item, index) => (
-                        <div
-                          key={index}
-                          className={`flex ${isGridView ? 'slide-grid' : 'items-center justify-between p-3 rounded-lg restock-item shadow-md'} ${
-                            fadingItemIndex === index ? 'fade-down' : isGridView ? '' : slidingItems.includes(index) ? 'slide-up' : ''
-                          } ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
-                        >
-                          <div className={isGridView ? '' : 'flex items-center'}>
-                            <img
-                              src={`images/${item.product.replace(/ /g, '_')}.png`}
-                              alt={item.product}
-                              className={isGridView ? '' : 'w-[20vw] h-[20vw] max-w-24 max-h-24 mr-4 object-contain'}
-                              onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }}
-                            />
-                            <span className={isGridView ? '' : `ml-4 text-[clamp(1rem,4vw,1.125rem)] ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                              {item.product} (x{item.quantity})
-                            </span>
-                          </div>
-                          {!isGridView && (
-                            <button
-                              onClick={() => setShowCollectPopup(restockList.findIndex(i => i.product === item.product && i.quantity === item.quantity && !i.collected))}
-                              className="px-4 py-2 bg-blue-700 text-white rounded-lg shadow-md hover:bg-blue-600 text-[clamp(0.875rem,3vw,1rem)]"
-                            >
-                              View
-                            </button>
-                          )}
-                          {isGridView && (
-                            <button
-                              onClick={() => setShowCollectPopup(restockList.findIndex(i => i.product === item.product && i.quantity === item.quantity && !i.collected))}
-                              className="mt-2 px-3 py-1.5 bg-blue-700 text-white rounded-lg shadow-md hover:bg-blue-600 text-[clamp(0.75rem,3vw,0.875rem)]"
-                            >
-                              View
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div>
-                  <div className="search-container">
-                    <input
-                      type="text"
-                      placeholder="Search products..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className={`w-[calc(100%-8rem)] p-2 border rounded-lg ${isDarkMode ? 'bg-gray-700 text-white placeholder-gray-400 border-gray-600' : 'bg-gray-200 text-gray-900 placeholder-gray-500 border-gray-300'}`}
-                      aria-label="Search products"
-                    />
-                    <button
-                      onClick={clearSearch}
-                      className="search-clear w-10 h-10 rounded-full bg-red-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-red-600 scale-transition"
-                      aria-label="Clear search"
-                    >
-                      <i className="fas fa-times"></i>
-                    </button>
-                    <button
-                      onClick={toggleSearchInfoPopup}
-                      className="search-info w-10 h-10 rounded-full bg-green-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-green-600 scale-transition"
-                      aria-label="Search info"
-                    >
-                      ?
-                    </button>
-                  </div>
-                  <button
-                    onClick={toggleAddProductPopup}
-                    className={`w-full py-2 mb-4 rounded-lg font-semibold text-white shadow-md hover:bg-gray-600 ${isDarkMode ? 'bg-green-700' : 'bg-green-600'}`}
-                  >
-                    Request New Product
-                  </button>
-                  <div className={`pt-4 ${isGridView ? 'grid-view' : 'grid gap-3'}`}>
-                    {filteredProducts.length === 0 ? (
-                      <p className={`text-center ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>No products found.</p>
-                    ) : (
-                      filteredProducts.map((product) => (
-                        <div
-                          key={product}
-                          className={`flex ${isGridView ? '' : 'items-center p-3 rounded-lg shadow-lg'} ${
-                            isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-200 hover:bg-gray-300'
-                          }`}
-                          onClick={() => {
-                            setCurrentProduct(product);
-                            setShowPopup(true);
-                          }}
-                        >
-                          <img
-                            src={`images/${product.replace(/ /g, '_')}.png`}
-                            alt={product}
-                            className={isGridView ? '' : 'w-[20vw] h-[20vw] max-w-24 max-h-24 mr-4 object-contain'}
-                            onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }}
-                          />
-                          <span className={isGridView ? '' : `text-[clamp(1rem,4vw,1.125rem)] font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            {product}
-                          </span>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </main>
-
-          <div className="bug-report-container">
-            <h3 className={`text-[clamp(1.25rem,4vw,1.5rem)] font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Report a Bug</h3>
-            <textarea
-              value={bugReport}
-              onChange={(e) => setBugReport(e.target.value)}
-              placeholder="Describe the bug or issue..."
-              className={`w-full p-2 border rounded-lg mb-4 ${isDarkMode ? 'bg-gray-700 text-white placeholder-gray-400 border-gray-600' : 'bg-gray-200 text-gray-900 placeholder-gray-500 border-gray-300'}`}
-              rows="4"
-              aria-label="Bug report"
-            ></textarea>
-            <div className="flex justify-end">
-              <button
-                onClick={submitBugReport}
-                className="px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-              >
-                Submit
-              </button>
-            </div>
-          </div>
-
-          <div className="changelog-container">
-            <button
-              onClick={toggleChangelogPopup}
-              className={`underline mb-4 ${isDarkMode ? 'text-gray-200 hover:text-blue-500' : 'text-gray-600 hover:text-blue-500'}`}
-            >
-              Changelog
-            </button>
-            <span className={isDarkMode ? 'text-gray-200' : 'text-gray-600'}>V2.6</span>
-            <button
-              onClick={toggleAdminPopup}
-              className={`underline mb-4 ${isDarkMode ? 'text-gray-200 hover:text-blue-500' : 'text-gray-600 hover:text-blue-500'}`}
-            >
-              Admin
-            </button>
-          </div>
-
-          {showPopup && (
-            <div
-              className={`fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center ${isClosingPopup ? 'fade-out' : 'fade-in'}`}
-              onClick={() => {
-                setIsClosingPopup(true);
-                setTimeout(() => {
-                  setShowPopup(false);
-                  setIsClosingPopup(false);
-                  setQuantity(1);
-                }, 300);
-              }}
-            >
-              <div
-                className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg relative ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                  onClick={toggleProductInfoPopup}
-                  className="absolute top-2 right-2 w-10 h-10 rounded-full bg-green-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-green-600 scale-transition"
-                  aria-label="Product info"
-                >
-                  ?
-                </button>
-                <div className="flex items-center mb-4">
-                  <img
-                    src={`images/${currentProduct.replace(/ /g, '_')}.png`}
-                    alt={currentProduct}
-                    className="w-[20vw] h-[20vw] max-w-24 max-h-24 mr-4 object-contain"
-                    onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }}
-                  />
-                  <h2 className={`text-[clamp(1rem,4vw,1.125rem)] font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{currentProduct}</h2>
-                </div>
-                <div className="flex items-center mb-4">
-                  <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="px-4 py-2 bg-gray-600 text-white rounded-lg scale-transition shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                    aria-label="Decrease quantity"
-                  >
-                    -
-                  </button>
-                  <input
-                    type="number"
-                    value={quantity}
-                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                    className={`mx-4 w-16 text-center border rounded-lg ${isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-300 text-gray-900 border-gray-400'}`}
-                    aria-label="Quantity"
-                  />
-                  <button
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="px-4 py-2 bg-gray-600 text-white rounded-lg scale-transition shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                    aria-label="Increase quantity"
-                  >
-                    +
-                  </button>
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <button
-                    onClick={() => {
-                      setIsClosingPopup(true);
-                      setTimeout(() => {
-                        setShowPopup(false);
-                        setIsClosingPopup(false);
-                        setQuantity(1);
-                      }, 300);
-                    }}
-                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={addToRestock}
-                    className="px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                  >
-                    Confirm
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showResetConfirm && (
-            <div
-              className={`fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center ${isClosingResetPopup ? 'fade-out' : 'fade-in'}`}
-              onClick={() => {
-                setIsClosingResetPopup(true);
-                setTimeout(() => {
-                  setShowResetConfirm(false);
-                  setIsClosingResetPopup(false);
-                }, 300);
-              }}
-            >
-              <div
-                className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg relative ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                  onClick={toggleResetInfoPopup}
-                  className="absolute top-2 right-2 w-10 h-10 rounded-full bg-green-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-green-600 scale-transition"
-                  aria-label="Reset info"
-                >
-                  ?
-                </button>
-                <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>Are you sure you want to reset the restock list?</p>
-                <div className="flex justify-end space-x-2">
-                  <button
-                    onClick={() => {
-                      setIsClosingResetPopup(true);
-                      setTimeout(() => {
-                        setShowResetConfirm(false);
-                        setIsClosingResetPopup(false);
-                      }, 300);
-                    }}
-                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={resetList}
-                    className="px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                  >
-                    Reset
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showCollectPopup !== null && (
-            <div
-              className={`fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center ${isClosingCollectPopup ? 'fade-out' : 'fade-in'}`}
-              onClick={() => {
-                setIsClosingCollectPopup(true);
-                setTimeout(() => {
-                  setShowCollectPopup(null);
-                  setIsClosingCollectPopup(false);
-                }, 300);
-              }}
-            >
-              <div
-                className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg relative ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                  onClick={toggleCollectInfoPopup}
-                  className="absolute top-2 right-2 w-10 h-10 rounded-full bg-green-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-green-600 scale-transition"
-                  aria-label="Collect info"
-                >
-                  ?
-                </button>
-                <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
-                  Mark {restockList[showCollectPopup].product} (x{restockList[showCollectPopup].quantity}) as collected?
-                </p>
-                <div className="flex justify-end space-x-2">
-                  <button
-                    onClick={() => {
-                      setIsClosingCollectPopup(true);
-                      setTimeout(() => {
-                        setShowCollectPopup(null);
-                        setIsClosingCollectPopup(false);
-                      }, 300);
-                    }}
-                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => confirmCollected(showCollectPopup)}
-                    className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                  >
-                    Confirm
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showAddProductPopup && (
-            <div
-              className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingAddProductPopup ? 'fade-out' : 'fade-in'}`}
-              onClick={toggleAddProductPopup}
-            >
-              <div
-                className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <h3 className={`text-[clamp(1.25rem,4vw,1.5rem)] font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Request New Product</h3>
-                <textarea
-                  value={productRequest}
-                  onChange={(e) => setProductRequest(e.target.value)}
-                  placeholder="Describe the product you want to add..."
-                  className={`w-full p-2 border rounded-lg mb-4 ${isDarkMode ? 'bg-gray-700 text-white placeholder-gray-400 border-gray-600' : 'bg-gray-200 text-gray-900 placeholder-gray-500 border-gray-300'}`}
-                  rows="4"
-                  aria-label="Product request"
-                ></textarea>
-                <div className="flex justify-end space-x-2">
-                  <button
-                    onClick={toggleAddProductPopup}
-                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={submitProductRequest}
-                    className="px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                  >
-                    Submit
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showAdminPopup && (
-            <div
-              className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingAdminPopup ? 'fade-out' : 'fade-in'}`}
-              onClick={toggleAdminPopup}
-            >
-              <div
-                className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <h3 className={`text-[clamp(1.25rem,4vw,1.5rem)] font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Enter Admin Code</h3>
-                <div className={`p-4 mb-4 border rounded-lg code-display text-[clamp(1.25rem,4vw,1.5rem)] ${isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-300 text-gray-900 border-gray-400'}`}>
-                  {adminCode.padEnd(4, '_')}
-                </div>
-                <div className="keypad-grid">
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, '', 0, ''].map((digit, index) => (
-                    digit !== '' && (
-                      <button
-                        key={index}
-                        onClick={() => handleKeypadInput(digit.toString())}
-                        className="keypad-button"
-                      >
-                        {digit}
-                      </button>
-                    )
-                  ))}
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <button
-                    onClick={clearAdminCode}
-                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                  >
-                    Clear
-                  </button>
-                  <button
-                    onClick={submitAdminCode}
-                    className="px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                  >
-                    Submit
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showInfoPopup && (
-            <div
-              className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingInfoPopup ? 'fade-out' : 'fade-in'}`}
-              onClick={toggleInfoPopup}
-            >
-              <div
-                className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
-                  Select products to add to the restock list. View and mark items as collected in the Restock List tab. Toggle dark/light mode for better visibility. The Bug Report and Change Log sections appear at the bottom of the screen.
-                </p>
-                <div className="flex justify-end">
-                  <button
-                    onClick={toggleInfoPopup}
-                    className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showProductInfoPopup && (
-            <div
-              className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingProductInfoPopup ? 'fade-out' : 'fade-in'}`}
-              onClick={toggleProductInfoPopup}
-            >
-              <div
-                className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
-                  Use the +/- buttons to adjust the quantity of the product. Confirm to add it to the restock list. If the product is already in the list, the quantity will be added to the existing amount.
-                </p>
-                <div className="flex justify-end">
-                  <button
-                    onClick={toggleProductInfoPopup}
-                    className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showRestockInfoPopup && (
-            <div
-              className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingRestockInfoPopup ? 'fade-out' : 'fade-in'}`}
-              onClick={toggleRestockInfoPopup}
-            >
-              <div
-                className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
-                  View products in the restock list. Click 'View' to mark items as collected, or use 'Reset List' to clear all items. View the total number of items to plan restocking.
-                </p>
-                <div className="flex justify-end">
-                  <button
-                    onClick={toggleRestockInfoPopup}
-                    className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showCollectInfoPopup && (
-            <div
-              className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingCollectInfoPopup ? 'fade-out' : 'fade-in'}`}
-              onClick={toggleCollectInfoPopup}
-            >
-              <div
-                className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
-                  Confirming marks the product as collected, removing it from the restock list. Undo an action within 5 seconds to restore the item.
-                </p>
-                <div className="flex justify-end">
-                  <button
-                    onClick={toggleCollectInfoPopup}
-                    className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showResetInfoPopup && (
-            <div
-              className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingResetInfoPopup ? 'fade-out' : 'fade-in'}`}
-              onClick={toggleResetInfoPopup}
-            >
-              <div
-                className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
-                  Resetting clears all items from the restock list. Undo an action within 5 seconds to restore the list.
-                </p>
-                <div className="flex justify-end">
-                  <button
-                    onClick={toggleResetInfoPopup}
-                    className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showSearchInfoPopup && (
-            <div
-              className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingSearchInfoPopup ? 'fade-out' : 'fade-in'}`}
-              onClick={toggleSearchInfoPopup}
-            >
-              <div
-                className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-200'}`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <p className={`mb-4 text-[clamp(0.875rem,3vw,1rem)] ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`}>
-                  Search to quickly find products by name.
-                </p>
-                <div className="flex justify-end">
-                  <button
-                    onClick={toggleSearchInfoPopup}
-                    className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showChangelogPopup && (
-            <div
-              className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${isClosingChangelogPopup ? 'fade-out' : 'fade-in'}`}
-              onClick={toggleChangelogPopup}
-            >
-              <div
-                className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg ${isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-gray-200 text-gray-900'}`}
-                onClick={(e) => e.stopPropagation()}
-                style={{ maxHeight: '70vh', overflowY: 'auto' }}
-              >
-                <h3 className={`text-[clamp(1.25rem,4vw,1.5rem)] font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Changelog</h3>
-                <div className="changelog-list">
-                  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.6</h4>
-                  <ul>
-                    <li className="added">Added Admin link with a 4-digit code keypad to access a special admin page</li>
-                  </ul>
-                  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.5</h4>
-                  <ul>
-                    <li className="added">Added "Request New Product" button to suggest new products via email</li>
-                  </ul>
-                  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.4</h4>
-                  <ul>
-                    <li className="added">Made text size adjust better for all screen sizes</li>
-                    <li className="added">Improved product images to fit nicely on any device</li>
-                    <li className="added">Added labels to buttons and inputs for easier use</li>
-                  </ul>
-                  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.3</h4>
-                  <ul>
-                    <li className="added">Moved toast message lower so it doesn't block the View button</li>
-                    <li className="added">Fixed small layout issues in grid view on small screens</li>
-                    <li className="added">Made toast messages appear and disappear more smoothly</li>
-                  </ul>
-                  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.2</h4>
-                  <ul>
-                    <li className="added">Added a scrollable changelog with newest updates first</li>
-                    <li className="added">Placed changelog at the bottom of the screen</li>
-                    <li className="added">Added a bug report section to send feedback</li>
-                    <li className="added">Moved changelog close button to bottom-right</li>
-                    <li className="added">Placed bug report section above changelog</li>
-                    <li className="removed">Removed extra space between products and changelog</li>
-                  </ul>
-                  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.1.2</h4>
-                  <ul>
-                    <li className="added">Added undo button for removing or resetting items (shows for 5 seconds)</li>
-                    <li className="added">Added toast messages to show when actions happen</li>
-                    <li className="added">Added total item count in the restock list</li>
-                  </ul>
-                  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.1.1</h4>
-                  <ul>
-                    <li className="added">Added search bar with a clear button to find products fast</li>
-                    <li className="added">Added help popups to explain how to use the app</li>
-                    <li className="added">Used softer colors in light mode for easier viewing</li>
-                  </ul>
-                  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.1.0</h4>
-                  <ul>
-                    <li className="added">Added option to switch between grid and list view for products and restock list</li>
-                    <li className="added">Made buttons bigger and easier to tap on phones</li>
-                    <li className="added">Added dark/light mode switch with sun/moon icons</li>
-                    <li className="added">Added a changelog link at the bottom</li>
-                    <li className="added">Added smooth animations when removing items or opening popups</li>
-                    <li className="removed">Removed developer name from the bottom</li>
-                  </ul>
-                  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 2.0</h4>
-                  <ul>
-                    <li className="added">Added main restock features to pick products and set quantities</li>
-                    <li className="added">Added basic dark and light mode with saved settings</li>
-                    <li className="added">Added restock list with options to mark items as collected or clear the list</li>
-                  </ul>
-                  <h4 className={`text-[clamp(1rem,3vw,1.125rem)] font-semibold mb-2 mt-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Version 1.0</h4>
-                  <ul>
-                    <li className="added">First app version with a simple product list</li>
-                    <li className="added">Added product selection with basic images</li>
-                    <li className="added">Added restock list saved on your device</li>
-                    <li className="added">Added clean and simple design with basic styling</li>
-                  </ul>
-                </div>
-              </div>
-              <button
-                onClick={toggleChangelogPopup}
-                className={`changelog-close px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 shadow-md text-[clamp(0.875rem,3vw,1rem)]`}
-              >
-                Close
-              </button>
-            </div>
-          )}
-
-          {showToast && (
-            <div className={`toast flex items-center space-x-4 fade-in`}>
-              <p className={`font-semibold text-[clamp(0.875rem,3vw,1rem)]`}>
-                {lastAction?.type === 'collect' ? 'Item marked as collected.' : 
-                 lastAction?.type === 'reset' ? 'Restock list reset.' : 
-                 lastAction?.type === 'bug-report-success' ? lastAction.data : 
-                 lastAction?.type === 'bug-report-error' ? lastAction.data : 
-                 lastAction?.type === 'product-request-success' ? lastAction.data : 
-                 lastAction?.type === 'product-request-error' ? lastAction.data : 
-                 lastAction?.type === 'admin-code-error' ? lastAction.data : ''}
-              </p>
-              {lastAction?.type !== 'bug-report-success' && lastAction?.type !== 'bug-report-error' && lastAction?.type !== 'product-request-success' && lastAction?.type !== 'product-request-error' && lastAction?.type !== 'admin-code-error' && (
-                <button
-                  onClick={undoAction}
-                  className="px-3 py-1 bg-blue-700 text-white rounded-lg hover:bg-blue-600 shadow-md text-[clamp(0.75rem,3vw,0.875rem)]"
-                >
-                  Undo
-                </button>
-              )}
-            </div>
-          )}
+function Modal({ open, title, onClose, children, wide=false }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4">
+      <div className={`bg-white dark:bg-slate-800 rounded-2xl overflow-hidden w-full ${wide ? 'max-w-3xl' : 'max-w-xl'} card-shadow`}>
+        <div className="px-5 py-3 border-b border-slate-200/10 flex justify-between items-center">
+          <h3 className="font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-300"><i className="fas fa-times"></i></button>
         </div>
-      );
+        <div className="p-5 text-slate-900 dark:text-slate-100">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Main App ---------- */
+function App() {
+  /* theme */
+  const [isDark, setIsDark] = useState(() => load(LS.THEME, true));
+  useEffect(()=>{ save(LS.THEME, isDark); document.body.className = isDark ? 'dark bg-gradient-to-br from-slate-800 to-slate-700 min-h-screen' : 'bg-[#f1f2f4] min-h-screen'; }, [isDark]);
+
+  /* products */
+  const [products, setProducts] = useState(() => load(LS.PRODUCTS, DEFAULT_PRODUCTS));
+  useEffect(()=> save(LS.PRODUCTS, products), [products]);
+
+  /* orders */
+  const [orders, setOrders] = useState(() => load(LS.ORDERS, []));
+  useEffect(()=> save(LS.ORDERS, orders), [orders]);
+
+  /* active order */
+  const [orderType, setOrderType] = useState(null); // 'collection' or 'delivery'
+  const [orderItems, setOrderItems] = useState([]);
+  const [orderTime, setOrderTime] = useState(''); // "HH:MM"
+  const [customer, setCustomer] = useState({ name:'', address:'', postcode:'', phone:'' });
+  const [step, setStep] = useState(1);
+
+  /* editing */
+  const [editingOrderId, setEditingOrderId] = useState(null);
+  const [editingPart, setEditingPart] = useState(null); // 'items' | 'time' | 'customer'
+  const [editingBannerCustomer, setEditingBannerCustomer] = useState('');
+
+  /* UI */
+  const [showItemModal, setShowItemModal] = useState(null);
+  const [toast, setToast] = useState({ open:false, text:'', action:null });
+  const [search, setSearch] = useState('');
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [showCompleted, setShowCompleted] = useState(false);
+  const [resetModalOpen, setResetModalOpen] = useState(false);
+
+  /* new-order confirmation modal */
+  const [newOrderConfirmOpen, setNewOrderConfirmOpen] = useState(false);
+  const [pendingNewType, setPendingNewType] = useState(null); // temp store type when modal shows
+
+  /* edit-choice modal */
+  const [editChoiceModalOpen, setEditChoiceModalOpen] = useState(false);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+const [viewingOrder, setViewingOrder] = useState(null);
+
+
+  /* derived totals */
+  const totalItems = useMemo(()=> orderItems.reduce((s,i)=>s + i.qty, 0), [orderItems]);
+  const grandTotalPence = useMemo(()=> orderItems.reduce((s,i)=> s + i.qty * i.pricePence, 0), [orderItems]);
+
+  /* helpers */
+  const showToast = (text, action=null) => {
+    setToast({ open:true, text, action });
+    if (!action) setTimeout(()=> setToast({ open:false, text:'', action:null }), 3500);
+  };
+
+  /* product filters */
+  const toggleTag = (tag) => setSelectedTags(prev => prev.includes(tag) ? prev.filter(t=>t!==tag) : [...prev, tag]);
+  const clearFilters = () => setSelectedTags([]);
+
+  const filteredProducts = useMemo(()=> {
+    const q = search.trim().toLowerCase();
+    return products.filter(p => {
+      const qMatch = !q || p.name.toLowerCase().includes(q);
+      const tagMatch = selectedTags.length === 0 || (p.tags || []).some(t => selectedTags.includes(t));
+      return qMatch && tagMatch;
+    });
+  }, [products, search, selectedTags]);
+
+  /* item ops */
+  const addOrUpdateItem = (product, qty) => {
+    if (!product || qty <= 0) return;
+    setOrderItems(prev => {
+      const found = prev.find(i => i.productId === product.id);
+      if (found) return prev.map(i => i.productId === product.id ? { ...i, qty: i.qty + qty } : i);
+      return [...prev, { productId: product.id, name: product.name, pricePence: product.pricePence, qty }];
+    });
+    showToast(`${product.name} added x${qty}`);
+  };
+
+  const updateQty = (productId, qty) => {
+    if (qty <= 0) { removeItem(productId); return; }
+    setOrderItems(prev => prev.map(i => i.productId === productId ? { ...i, qty } : i));
+    showToast('Quantity updated');
+  };
+
+  const removeItem = (productId) => {
+    const prod = orderItems.find(i => i.productId === productId);
+    setOrderItems(prev => prev.filter(i => i.productId !== productId));
+    if (prod) showToast(`${prod.name} removed`);
+  };
+
+  const clearActiveOrder = () => {
+    setOrderType(null);
+    setOrderItems([]);
+    setOrderTime('');
+    setCustomer({ name:'', address:'', postcode:'', phone:'' });
+    setEditingOrderId(null);
+    setEditingPart(null);
+    setEditingBannerCustomer('');
+    setStep(1);
+  };
+
+  /* check if there is active unsaved order data */
+  const currentOrderHasData = () => {
+    if (orderItems.length > 0) return true;
+    if (orderTime) return true;
+    if (customer.name || customer.address || customer.postcode || customer.phone) return true;
+    return false;
+  };
+
+  /* handle starting new order (with confirmation when needed) */
+  const handleStartNew = (type) => {
+    if (currentOrderHasData()) {
+      setPendingNewType(type);
+      setNewOrderConfirmOpen(true);
+    } else {
+      clearActiveOrder();
+      setOrderType(type);
+      setStep(2);
+    }
+  };
+  const confirmStartNew = () => {
+    clearActiveOrder();
+    setOrderType(pendingNewType);
+    setPendingNewType(null);
+    setNewOrderConfirmOpen(false);
+    showToast('New order started');
+    setStep(2);
+  };
+  const cancelStartNew = () => {
+    setPendingNewType(null);
+    setNewOrderConfirmOpen(false);
+  };
+
+  /* saving new order (not editing) */
+  const saveOrder = () => {
+    if (!orderTime) { showToast('Please choose a time'); return; }
+    if (!customer.name.trim()) { showToast('Customer name required'); return; }
+    if (orderType === 'delivery' && (!customer.address.trim() || !customer.postcode.trim())) { showToast('Delivery address and postcode required'); return; }
+
+    const orderObj = {
+      id: uid(),
+      type: orderType,
+      items: orderItems.map(i => ({ ...i })),
+      time: orderTime,
+      customer: { ...customer },
+      totalPence: grandTotalPence,
+      createdAt: new Date().toISOString(),
+      status: 'pending'
+    };
+    setOrders(prev => [orderObj, ...prev]);
+    showToast('Order saved');
+    clearActiveOrder();
+  };
+
+  /* mark complete / reopen / delete */
+  const markComplete = (id) => { setOrders(prev => prev.map(o => o.id === id ? { ...o, status:'completed' } : o)); showToast('Order marked complete'); };
+  const reopenOrder = (id) => { setOrders(prev => prev.map(o => o.id === id ? { ...o, status:'pending' } : o)); showToast('Order reopened'); };
+  const deleteOrder = (id) => { setOrders(prev => prev.filter(o => o.id !== id)); showToast('Order deleted'); };
+
+  /* reset day modal */
+  const confirmResetDay = () => setResetModalOpen(true);
+  const doResetDay = () => { setOrders([]); setResetModalOpen(false); showToast('Day reset — all orders cleared'); };
+
+/* view flow - open view modal with print option */
+const beginView = (orderId) => {
+  const ord = orders.find(o => o.id === orderId);
+  if (!ord) { showToast('Order not found'); return; }
+  setViewingOrder(ord);
+  setViewModalOpen(true);
+};
+
+  /* edit flow - open choice modal */
+  const beginEdit = (orderId) => {
+    const ord = orders.find(o => o.id === orderId);
+    if (!ord) { showToast('Order not found'); return; }
+    if (ord.status !== 'pending') { showToast('Only pending orders can be edited'); return; }
+    setEditingOrderId(orderId);
+    setEditChoiceModalOpen(true);
+  };
+
+  /* choose part to edit */
+  const chooseEditPart = (part) => {
+    const ord = orders.find(o => o.id === editingOrderId);
+    if (!ord) { setEditChoiceModalOpen(false); setEditingOrderId(null); showToast('Order not found'); return; }
+
+    // load active form with order values
+    setOrderType(ord.type);
+    setOrderItems(ord.items.map(i => ({ ...i })));
+    setOrderTime(ord.time || '');
+    setCustomer({ ...ord.customer });
+
+    setEditingPart(part);
+    setEditingBannerCustomer(ord.customer.name || '');
+    // jump to the step for that part
+    if (part === 'items') setStep(2);
+    if (part === 'time') setStep(3);
+    if (part === 'customer') setStep(4);
+
+    setEditChoiceModalOpen(false);
+    showToast(`Editing ${part} for ${ord.customer.name}`);
+  };
+
+  /* done editing - save only the edited part back to the specific order */
+const doneEditing = () => {
+  if (!editingOrderId) { showToast('No order in edit mode'); return; }
+  let updatedOrder = null;
+  setOrders(prev => prev.map(o => {
+    if (o.id !== editingOrderId) return o;
+    const updated = { ...o };
+    if (editingPart === 'items') {
+      updated.items = orderItems.map(i => ({ ...i }));
+      updated.totalPence = orderItems.reduce((s,i) => s + i.qty * i.pricePence, 0);
+    } else if (editingPart === 'time') {
+      if (!orderTime) { showToast('Please choose a time before finishing'); return o; }
+      updated.time = orderTime;
+    } else if (editingPart === 'customer') {
+      if (!customer.name.trim()) { showToast('Customer name required'); return o; }
+      if (o.type === 'delivery' && (!customer.address.trim() || !customer.postcode.trim())) { showToast('Address & postcode required'); return o; }
+      updated.customer = { ...customer };
+    }
+    updatedOrder = updated;
+    return updated;
+  }));
+
+  showToast(`Changes saved for ${editingBannerCustomer || 'order'}`);
+
+  // auto-generate a PDF receipt for the updated order
+  if (updatedOrder) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: [58, 120],
+    });
+
+    let y = 10;
+    const line = (text, size = 10, bold = false) => {
+      doc.setFontSize(size);
+      doc.setFont('helvetica', bold ? 'bold' : 'normal');
+      doc.text(text, 5, y);
+      y += 5;
     };
 
-    ReactDOM.render(<App />, document.getElementById('root'));
-  </script>
+    line('🐟 Fish & Chips Shop', 12, true);
+    line('------------------------------');
+    line(`Order Type: ${updatedOrder.type}`);
+    line(`Time: ${updatedOrder.time}`);
+    line(`Customer: ${updatedOrder.customer.name}`);
+    if (updatedOrder.type === 'delivery') {
+      line(`${updatedOrder.customer.address}`);
+      line(`${updatedOrder.customer.postcode}`);
+      if (updatedOrder.customer.phone) line(`Phone: ${updatedOrder.customer.phone}`);
+    }
+    line('------------------------------');
+
+    updatedOrder.items.forEach(it => {
+      line(`${it.name} x${it.qty}`);
+      line(`£${(it.pricePence * it.qty / 100).toFixed(2)}`);
+    });
+
+    line('------------------------------');
+    line(`Total: £${(updatedOrder.totalPence / 100).toFixed(2)}`, 12, true);
+    line('------------------------------');
+    line(new Date().toLocaleString(), 8);
+    line('Thank you!', 10, true);
+
+    doc.save(`order_${updatedOrder.customer.name || 'customer'}.pdf`);
+  }
+
+  // exit edit mode
+  setEditingPart(null);
+  setEditingOrderId(null);
+  setEditingBannerCustomer('');
+  clearActiveOrder();
+};
+
+/* auto-hide toast */
+useEffect(() => {
+  if (toast.open && !toast.action) {
+    const t = setTimeout(() => setToast({ open: false, text: '', action: null }), 3500);
+    return () => clearTimeout(t);
+  }
+}, [toast]);
+
+/* ---------- Render ---------- */
+return (
+  <div className="min-h-screen pb-16">
+    {/* Editing banner */}
+    {editingPart && (
+      <div className="w-full bg-yellow-400 text-slate-900 py-2">
+        <div className="max-w-[92vw] mx-auto text-center font-semibold">
+          🟡 Editing order for {editingBannerCustomer || 'customer'} — make changes, then press <span className="underline">Done Editing</span>
+        </div>
+      </div>
+    )}
+
+
+      <header className="max-w-[92vw] mx-auto pt-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className={`text-2xl md:text-3xl font-extrabold ${isDark ? 'text-white' : 'text-slate-800'}`}>Phone Order Manager</h1>
+            <p className={`${isDark ? 'text-slate-200/80' : 'text-slate-700/80'} mt-1`}>Phone order flow — collection & delivery</p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button onClick={() => setIsDark(d=>!d)} className={`w-10 h-10 rounded-full ${isDark ? 'bg-emerald-600' : 'bg-emerald-500'} text-white flex items-center justify-center scale-transition`}>
+              <i className={`fas ${isDark ? 'fa-moon' : 'fa-sun'}`}></i>
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-4 flex gap-3">
+          <button onClick={() => handleStartNew('collection')}
+                  className={`flex-1 py-3 rounded-xl text-white font-semibold ${orderType === 'collection' ? 'bg-emerald-500' : 'bg-emerald-600/90 hover:bg-emerald-500'} card-shadow`}>
+            Collection
+          </button>
+          <button onClick={() => handleStartNew('delivery')}
+                  className={`flex-1 py-3 rounded-xl text-white font-semibold ${orderType === 'delivery' ? 'bg-blue-500' : 'bg-blue-600/90 hover:bg-blue-500'} card-shadow`}>
+            Delivery
+          </button>
+        </div>
+      </header>
+
+      <main className="max-w-[92vw] mx-auto mt-6 grid md:grid-cols-3 gap-6">
+        {/* LEFT: Steps / form */}
+        <section className="md:col-span-2 space-y-4">
+          <div className={`${isDark ? 'bg-slate-800' : 'bg-white'} rounded-2xl p-4 card-shadow`}>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <div className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Step {step} of 5</div>
+                <h2 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                  {step === 1 && 'Confirm Type'}
+                  {step === 2 && 'Add Items'}
+                  {step === 3 && 'Choose Time'}
+                  {step === 4 && 'Customer Details'}
+                  {step === 5 && 'Review & Confirm'}
+                </h2>
+              </div>
+              <div className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                Items: <span className="font-medium">{totalItems}</span> • Total: <span className="font-medium">{formatCurrency(grandTotalPence)}</span>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              {/* Step 1 */}
+              {step === 1 && (
+                <div className={`p-4 rounded-lg ${isDark ? 'bg-slate-700/40' : 'bg-slate-100'} text-slate-200`}>Choose Collection or Delivery at the top to start a new order.</div>
+              )}
+
+              {/* Step 2: Items */}
+              {step === 2 && (
+                <div className="mt-3">
+                  <div className="flex items-center gap-3 mb-3">
+                    <input placeholder="Search products..." value={search} onChange={(e)=>setSearch(e.target.value)} className={`flex-1 px-3 py-2 rounded-lg ${isDark ? 'bg-slate-700 text-white' : 'bg-white text-slate-800'} border ${isDark ? 'border-slate-600' : 'border-slate-200'}`} />
+                    <button onClick={()=>setFilterPanelOpen(p=>!p)} className={`px-3 py-2 rounded-lg ${isDark ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-800'}`}><i className="fas fa-filter"></i></button>
+                  </div>
+
+                  {/* inline filter panel */}
+                  {filterPanelOpen && (
+                    <div className={`mb-3 p-3 rounded-md ${isDark ? 'bg-slate-700/40' : 'bg-slate-100'}`}>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button onClick={() => { clearFilters(); setFilterPanelOpen(false); }} className="px-3 py-1 rounded bg-slate-200 text-slate-800 text-sm">All</button>
+                        {['mains','sides','drinks','extras'].map(tag => (
+                          <button key={tag} onClick={() => toggleTag(tag)} className={`${selectedTags.includes(tag) ? 'bg-indigo-600 text-white' : (isDark ? 'bg-slate-700 text-white' : 'bg-white text-slate-800')} px-3 py-1 rounded text-sm`}>{tag}</button>
+                        ))}
+                        <button onClick={() => clearFilters()} className="ml-auto text-sm text-rose-600">Clear</button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {filteredProducts.map(prod => (
+                      <div key={prod.id} className={`${isDark ? 'bg-slate-700' : 'bg-white'} rounded-xl p-3 flex items-center gap-3 cursor-pointer card-shadow hover:scale-105`} onClick={() => setShowItemModal(prod)}>
+                        <div className="w-12 h-12 rounded-md bg-slate-600 flex items-center justify-center text-sm font-semibold text-white">{prod.name.split(' ').slice(0,2).map(w=>w[0]).join('')}</div>
+                        <div className="flex-1">
+                          <div className={`${isDark ? 'text-white' : 'text-slate-800'} font-semibold`}>{prod.name}</div>
+                          <div className={`${isDark ? 'text-slate-300' : 'text-slate-600'} text-sm`}>{formatCurrency(prod.pricePence)}</div>
+                          <div className="mt-1 text-xs">{(prod.tags||[]).map(tag => <span key={tag} className={`inline-block mr-1 px-2 py-0.5 rounded text-xs ${isDark ? 'bg-slate-600 text-slate-200' : 'bg-slate-100 text-slate-600'}`}>{tag}</span>)}</div>
+                        </div>
+                        <div className={`${isDark ? 'text-slate-200' : 'text-slate-600'}`}><i className="fas fa-plus-circle"></i></div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-4">
+                    <h4 className={`${isDark ? 'text-white' : 'text-slate-800'} font-semibold mb-2`}>Current items</h4>
+                    {orderItems.length === 0 ? (
+                      <div className={`${isDark ? 'text-slate-300' : 'text-slate-600'}`}>No items yet. Tap a product to add.</div>
+                    ) : (
+                      <div className="space-y-2">
+                        {orderItems.map(it => (
+                          <div key={it.productId} className={`${isDark ? 'bg-slate-700' : 'bg-white'} p-2 rounded-lg flex items-center gap-3 card-shadow`}>
+                            <div className="w-10 h-10 rounded bg-slate-600 flex items-center justify-center text-sm font-semibold text-white">{it.name.split(' ').map(s=>s[0]).join('')}</div>
+                            <div className="flex-1">
+                              <div className={`${isDark ? 'text-white' : 'text-slate-800'} font-medium`}>{it.name}</div>
+                              <div className={`${isDark ? 'text-slate-300' : 'text-slate-600'} text-sm`}>{formatCurrency(it.pricePence)} × {it.qty} = <span className="font-semibold">{formatCurrency(it.pricePence * it.qty)}</span></div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button onClick={() => updateQty(it.productId, it.qty - 1)} className="px-2 py-1 rounded bg-slate-600 text-white">−</button>
+                              <input type="number" value={it.qty} min="1" onChange={(e)=>updateQty(it.productId, Math.max(1, parseInt(e.target.value || 1)))} className="w-14 px-2 py-1 rounded bg-slate-800 text-white text-center" />
+                              <button onClick={() => updateQty(it.productId, it.qty + 1)} className="px-2 py-1 rounded bg-emerald-600 text-white">+</button>
+                              <button onClick={() => removeItem(it.productId)} className="px-2 py-1 rounded bg-rose-600 text-white"><i className="fas fa-trash"></i></button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-3 mt-4">
+                    <button onClick={() => setStep(1)} className="px-4 py-2 rounded-lg bg-slate-700 text-white">Back</button>
+
+                    {/* Done Editing when editing items */}
+                    {editingPart === 'items' && editingOrderId ? (
+                      <button onClick={() => doneEditing()} className="px-4 py-2 rounded-lg bg-emerald-600 text-white font-semibold">Done Editing</button>
+                    ) : (
+                      <button onClick={() => setStep(3)} className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold">Next: Time</button>
+                    )}
+
+                    <button onClick={() => { setOrderItems([]); showToast('Order items cleared'); }} className="ml-auto px-4 py-2 rounded-lg bg-rose-600 text-white">Clear Items</button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: native time picker */}
+              {step === 3 && (
+                <div className="mt-3">
+                  <label className={`block ${isDark ? 'text-slate-200' : 'text-slate-700'} font-medium`}>Preferred {orderType === 'delivery' ? 'delivery' : 'collection'} time</label>
+                  <div className="mt-2">
+                    <input type="time" step="900" value={orderTime} onChange={(e)=>setOrderTime(e.target.value)} className={`px-3 py-2 rounded-lg ${isDark ? 'bg-slate-700 text-white' : 'bg-white text-slate-800'} border ${isDark ? 'border-slate-600' : 'border-slate-200'}`} />
+                  </div>
+                  <div className={`${isDark ? 'text-slate-300' : 'text-slate-600'} text-sm mt-2`}>Choose a time (minutes fixed to 15-minute intervals)</div>
+
+                  <div className="flex gap-3 mt-4">
+                    <button onClick={() => setStep(2)} className="px-4 py-2 rounded-lg bg-slate-700 text-white">Back</button>
+
+                    {/* Done Editing when editing time */}
+                    {editingPart === 'time' && editingOrderId ? (
+                      <button onClick={() => doneEditing()} className="px-4 py-2 rounded-lg bg-emerald-600 text-white font-semibold">Done Editing</button>
+                    ) : (
+                      <button onClick={() => setStep(4)} className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold">Next: Customer</button>
+                    )}
+
+                    <button onClick={() => { setOrderTime(''); showToast('Time cleared'); }} className="ml-auto px-4 py-2 rounded-lg bg-rose-600 text-white">Clear Time</button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 4: Customer info */}
+              {step === 4 && (
+                <div className="mt-3 space-y-3">
+                  <label className={`block ${isDark ? 'text-slate-200' : 'text-slate-700'} font-medium`}>Customer name</label>
+                  <input value={customer.name} onChange={(e)=>setCustomer(c=>({...c, name:e.target.value}))} className={`w-full px-3 py-2 rounded-lg ${isDark ? 'bg-slate-700 text-white' : 'bg-white text-slate-800'} border ${isDark ? 'border-slate-600' : 'border-slate-200'}`} placeholder="e.g. John Smith" />
+
+                  {orderType === 'delivery' && (
+                    <>
+                      <label className={`block ${isDark ? 'text-slate-200' : 'text-slate-700'} font-medium`}>Address</label>
+                      <input value={customer.address} onChange={(e)=>setCustomer(c=>({...c, address:e.target.value}))} className={`w-full px-3 py-2 rounded-lg ${isDark ? 'bg-slate-700 text-white' : 'bg-white text-slate-800'} border ${isDark ? 'border-slate-600' : 'border-slate-200'}`} placeholder="House number and street" />
+                      <div className="grid grid-cols-2 gap-3">
+                        <input value={customer.postcode} onChange={(e)=>setCustomer(c=>({...c, postcode:e.target.value}))} placeholder="Postcode" className={`px-3 py-2 rounded-lg ${isDark ? 'bg-slate-700 text-white' : 'bg-white text-slate-800'} border ${isDark ? 'border-slate-600' : 'border-slate-200'}`} />
+                        <input value={customer.phone} onChange={(e)=>setCustomer(c=>({...c, phone:e.target.value}))} placeholder="Phone (optional)" className={`px-3 py-2 rounded-lg ${isDark ? 'bg-slate-700 text-white' : 'bg-white text-slate-800'} border ${isDark ? 'border-slate-600' : 'border-slate-200'}`} />
+                      </div>
+                    </>
+                  )}
+
+                  <div className="flex gap-3 mt-4">
+                    <button onClick={() => setStep(3)} className="px-4 py-2 rounded-lg bg-slate-700 text-white">Back</button>
+
+                   {/* Done Editing when editing customer */}
+{editingPart === 'customer' && editingOrderId ? (
+  <button
+    onClick={() => doneEditing()}
+    className="px-4 py-2 rounded-lg bg-emerald-600 text-white font-semibold"
+  >
+    Done Editing
+  </button>
+) : (
+  <button
+    onClick={() => setStep(5)}
+    className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold"
+  >
+    Next: Review
+  </button>
+)}
+</div>
+</div>
+)}
+
+
+
+              {/* Step 5: Review */}
+              {step === 5 && (
+                <div className="mt-3">
+                  <div className={`${isDark ? 'bg-slate-700' : 'bg-white'} rounded-lg p-4`}>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className={`${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Order Type</div>
+                        <div className={`${isDark ? 'text-white' : 'text-slate-800'} font-semibold`}>{orderType ? orderType.charAt(0).toUpperCase() + orderType.slice(1) : '—'}</div>
+                      </div>
+                      <div>
+                        <div className={`${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Time</div>
+                        <div className={`${isDark ? 'text-white' : 'text-slate-800'} font-semibold`}>{orderTime || '—'}</div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <h4 className={`${isDark ? 'text-white' : 'text-slate-800'} font-semibold`}>Customer</h4>
+                      <div className={`${isDark ? 'text-slate-200' : 'text-slate-600'} mt-2`}>
+                        <div>{customer.name || '—'}</div>
+                        {orderType === 'delivery' && <div className={`${isDark ? 'text-slate-300' : 'text-slate-500'} mt-1`}>{customer.address || '—'} • {customer.postcode || '—'} {customer.phone ? `• ${customer.phone}` : ''}</div>}
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <h4 className={`${isDark ? 'text-white' : 'text-slate-800'} font-semibold`}>Items</h4>
+                      <div className="mt-2 space-y-2">
+                        {orderItems.map(it=>(
+                          <div key={it.productId} className="flex justify-between items-center">
+                            <div className={`${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{it.name} × {it.qty}</div>
+                            <div className={`${isDark ? 'text-slate-200' : 'text-slate-600'}`}>{formatCurrency(it.pricePence * it.qty)}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3 border-t border-slate-700 pt-3 flex justify-between font-semibold">
+                        <div>Grand Total</div>
+                        <div>{formatCurrency(grandTotalPence)}</div>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 mt-4">
+                      <button onClick={() => setStep(4)} className="px-4 py-2 rounded-lg bg-slate-700 text-white">Back</button>
+                      <button onClick={() => saveOrder()} className="px-4 py-2 rounded-lg bg-emerald-600 text-white font-semibold">Confirm & Save Order</button>
+                      <button onClick={() => clearActiveOrder()} className="ml-auto px-4 py-2 rounded-lg bg-rose-600 text-white">Start New Order</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* RIGHT: History / summary / reset */}
+        <aside className="md:col-span-1 space-y-4">
+          <div className={`${isDark ? 'bg-slate-800' : 'bg-white'} rounded-2xl p-4 card-shadow`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className={`${isDark ? 'text-slate-300' : 'text-slate-600'} text-sm`}>Current Order</div>
+                <div className={`${isDark ? 'text-white' : 'text-slate-800'} text-lg font-semibold`}>{orderType ? orderType.toUpperCase() : '—'}</div>
+              </div>
+              <div className="text-right">
+                <div className={`${isDark ? 'text-slate-300' : 'text-slate-600'} text-sm`}>Items</div>
+                <div className="font-semibold">{totalItems}</div>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <div className={`${isDark ? 'text-slate-300' : 'text-slate-600'} text-sm`}>Grand total</div>
+              <div className={`text-2xl font-extrabold mt-1 ${isDark ? 'text-white' : 'text-slate-800'}`}>{formatCurrency(grandTotalPence)}</div>
+            </div>
+
+            <div className="mt-4 flex gap-2">
+              
+              <button onClick={confirmResetDay} className="px-3 py-2 rounded-lg bg-rose-600 text-white">Reset Day</button>
+            </div>
+          </div>
+
+          {/* Pending / Completed */}
+          <div className={`${isDark ? 'bg-slate-800' : 'bg-white'} rounded-xl p-3 card-shadow`}>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className={`${isDark ? 'text-white' : 'text-slate-800'} font-semibold`}>Orders</h4>
+              <div className="text-sm">
+                <span className="font-medium">{orders.filter(o=>o.status==='pending').length}</span> pending
+              </div>
+            </div>
+
+            <div className="space-y-2 max-h-52 overflow-auto">
+              {orders.filter(o=>o.status==='pending').length === 0 && <div className={`${isDark ? 'text-slate-300' : 'text-slate-600'}`}>No pending orders</div>}
+              {orders.filter(o=>o.status==='pending').map(o => (
+                <div key={o.id} className={`${isDark ? 'bg-slate-700' : 'bg-slate-50'} p-2 rounded-lg flex items-start justify-between`}>
+                  <div>
+                    <div className={`${isDark ? 'text-white' : 'text-slate-800'} font-medium`}>{o.customer.name || 'No name'}</div>
+                    <div className={`${isDark ? 'text-slate-300' : 'text-slate-600'} text-sm`}>{o.type} • {o.time} • {formatCurrency(o.totalPence)}</div>
+                    <div className={`text-slate-300 text-sm mt-1`}>{o.items.map(i=>`${i.qty}×${i.name}`).join(', ')}</div>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <button onClick={()=>beginView(o.id)} className="px-2 py-1 rounded bg-indigo-600 text-white text-sm">View</button>
+<button onClick={()=>markComplete(o.id)} className="px-2 py-1 rounded bg-emerald-600 text-white text-sm">Complete</button>
+
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-3 border-t pt-3">
+              <button onClick={()=>setShowCompleted(c=>!c)} className="text-sm text-slate-300">{showCompleted ? 'Hide' : 'Show'} Completed Orders ({orders.filter(o=>o.status==='completed').length})</button>
+            </div>
+
+            {showCompleted && (
+              <div className="mt-3 space-y-2 max-h-40 overflow-auto">
+                {orders.filter(o=>o.status==='completed').length === 0 && <div className="text-slate-400">No completed orders</div>}
+                {orders.filter(o=>o.status==='completed').map(o => (
+                  <div key={o.id} className={`${isDark ? 'bg-slate-700' : 'bg-slate-50'} p-2 rounded-lg flex items-start justify-between`}>
+                    <div>
+                      <div className={`${isDark ? 'text-white' : 'text-slate-800'} font-medium`}>{o.customer.name || 'No name'}</div>
+                      <div className={`${isDark ? 'text-slate-300' : 'text-slate-600'} text-sm`}>{o.type} • {o.time} • {formatCurrency(o.totalPence)}</div>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <button onClick={()=>reopenOrder(o.id)} className="px-2 py-1 rounded bg-slate-600 text-white text-sm">Reopen</button>
+                      <button onClick={()=>deleteOrder(o.id)} className="px-2 py-1 rounded bg-rose-600 text-white text-sm">Delete</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          
+
+        </aside>
+      </main>
+
+      {/* Edit choice modal */}
+      <Modal open={editChoiceModalOpen} title="Edit order" onClose={() => { setEditChoiceModalOpen(false); setEditingOrderId(null); }}>
+        <div>
+          <p className="mb-3">Which part would you like to edit?</p>
+          <div className="flex gap-2">
+            <button onClick={() => chooseEditPart('items')} className="px-3 py-2 rounded bg-indigo-600 text-white">Items</button>
+            <button onClick={() => chooseEditPart('time')} className="px-3 py-2 rounded bg-amber-500 text-white">Time</button>
+            <button onClick={() => chooseEditPart('customer')} className="px-3 py-2 rounded bg-emerald-600 text-white">Customer Info</button>
+            <button onClick={() => { setEditChoiceModalOpen(false); setEditingOrderId(null); }} className="px-3 py-2 rounded bg-slate-700 text-white">Cancel</button>
+          </div>
+        </div>
+      </Modal>
+
+{/* View Order modal */}
+<Modal open={viewModalOpen} title="View Order" onClose={() => { setViewModalOpen(false); setViewingOrder(null); }}>
+  {viewingOrder && (
+    <div>
+      <p className="mb-2 font-semibold">{viewingOrder.customer.name}</p>
+      <p className="text-sm mb-2">{viewingOrder.type.toUpperCase()} • {viewingOrder.time}</p>
+      <div className="mb-2">
+        {viewingOrder.items.map(it => (
+          <div key={it.name} className="flex justify-between text-sm">
+            <div>{it.name} × {it.qty}</div>
+            <div>{formatCurrency(it.pricePence * it.qty)}</div>
+          </div>
+        ))}
+      </div>
+      <div className="font-semibold border-t pt-2 mb-3">Total: {formatCurrency(viewingOrder.totalPence)}</div>
+      <div className="flex gap-2">
+        <button
+  onClick={() => {
+    const { jsPDF } = window.jspdf;
+
+    // Create initial 58 mm × 65 mm page
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: [58, 65],
+    });
+
+    const pageHeight = 65;
+    const lineHeight = 4.5;
+    let y = 9;
+
+    const addLine = (text = "", size = 9, bold = false, align = "left") => {
+      doc.setFontSize(size);
+      doc.setFont("courier", bold ? "bold" : "normal");
+      // add new page only when needed
+      if (y > pageHeight - 8) {
+        doc.addPage([58, 65], "portrait");
+        y = 9;
+      }
+      doc.text(text, align === "center" ? 29 : 4, y, { align });
+      y += lineHeight;
+    };
+
+    // ---- HEADER ----
+    addLine("Fish & Chips Shop", 10, true, "center");
+    addLine("------------------------------", 9, false, "center");
+    addLine(`Order Type: ${viewingOrder.type}`);
+    addLine(`Time: ${viewingOrder.time}`);
+    addLine(`Customer: ${viewingOrder.customer.name}`);
+    addLine("------------------------------");
+
+    // ---- ITEMS (no prices) ----
+    viewingOrder.items.forEach((it) => {
+      addLine(`${it.name}  x${it.qty}`);
+    });
+
+    // ---- TOTAL ----
+    addLine("------------------------------");
+    addLine(
+      `Total: £${(viewingOrder.totalPence / 100).toFixed(2)}`,
+      10,
+      true,
+      "center"
+    );
+    addLine("------------------------------", 9, false, "center");
+
+    // ---- DELIVERY ADDRESS (same page if fits) ----
+    if (viewingOrder.type === "delivery") {
+      addLine("Delivery Address", 10, true);
+      addLine("------------------------------");
+      addLine(viewingOrder.customer.name);
+      addLine(viewingOrder.customer.address);
+      addLine(viewingOrder.customer.postcode);
+      if (viewingOrder.customer.phone)
+        addLine(`Phone: ${viewingOrder.customer.phone}`);
+    }
+
+    // ---- FOOTER ----
+    addLine(new Date().toLocaleString(), 8, false, "center");
+    addLine("Thank you!", 9, true, "center");
+
+    // ---- SAVE FILE ----
+    doc.save(`order_${viewingOrder.customer.name || "customer"}.pdf`);
+  }}
+  className="px-4 py-2 rounded bg-slate-700 text-white font-semibold"
+>
+  Download PDF Receipt
+</button>
+
+
+
+
+
+        <button
+          onClick={() => {
+            setViewModalOpen(false);
+            setEditingOrderId(viewingOrder.id);
+            setEditChoiceModalOpen(true);
+          }}
+          className="px-4 py-2 rounded bg-indigo-600 text-white font-semibold"
+        >
+          Edit / View Details
+        </button>
+      </div>
+    </div>
+  )}
+</Modal>
+
+      {/* Item add modal */}
+      <Modal open={!!showItemModal} title={showItemModal ? `Add ${showItemModal.name}` : ''} onClose={()=>setShowItemModal(null)}>
+        {showItemModal && <AddItemForm product={showItemModal} onCancel={()=>setShowItemModal(null)} onAdd={(qty)=>{ addOrUpdateItem(showItemModal, qty); setShowItemModal(null); }} />}
+      </Modal>
+
+      {/* Reset day modal */}
+      <Modal open={resetModalOpen} title="Reset day?" onClose={()=>setResetModalOpen(false)}>
+        <div>
+          <p>Are you sure you want to reset the day? This will clear all pending and completed orders.</p>
+          <div className="mt-4 flex gap-2">
+            <button onClick={()=>setResetModalOpen(false)} className="px-4 py-2 rounded bg-slate-700 text-white">Cancel</button>
+            <button onClick={()=>doResetDay()} className="px-4 py-2 rounded bg-rose-600 text-white">Reset Day</button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* New order confirm modal (red accent) */}
+      <Modal open={newOrderConfirmOpen} title="Start a new order?" onClose={cancelStartNew}>
+        <div>
+          <p>This will clear your current order in progress.</p>
+          <div className="mt-4 flex gap-2">
+            <button onClick={cancelStartNew} className="px-4 py-2 rounded bg-slate-700 text-white">Cancel</button>
+            <button onClick={confirmStartNew} className="px-4 py-2 rounded bg-rose-600 text-white">Start New</button>
+          </div>
+        </div>
+      </Modal>
+
+      <Toast open={toast.open} text={toast.text} actionLabel={toast.action ? 'Undo' : null} onAction={toast.action ? (() => { if (toast.action) toast.action(); setToast({ open:false, text:'', action:null }); }) : null} />
+
+    </div>
+  );
+}
+
+/* ---------- AddItemForm ---------- */
+function AddItemForm({ product, onCancel, onAdd }) {
+  const [qty, setQty] = useState(1);
+  const inc = () => setQty(q => q + 1);
+  const dec = () => setQty(q => Math.max(1, q - 1));
+  return (
+    <div>
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-lg bg-slate-700 flex items-center justify-center text-white text-xl font-bold">{product.name.split(' ').slice(0,2).map(w=>w[0]).join('')}</div>
+        <div>
+          <div className="font-semibold text-slate-900 dark:text-slate-100">{product.name}</div>
+          <div className="text-slate-500 dark:text-slate-300">{formatCurrency(product.pricePence)}</div>
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center gap-3">
+        <button onClick={dec} className="px-3 py-2 rounded bg-slate-600 text-white text-lg">−</button>
+        <input type="number" min="1" value={qty} onChange={(e)=>setQty(Math.max(1, parseInt(e.target.value || 1)))} className="w-20 px-2 py-2 rounded bg-white/5 text-black text-center" />
+        <button onClick={inc} className="px-3 py-2 rounded bg-emerald-600 text-white text-lg">+</button>
+      </div>
+
+      <div className="mt-4 flex gap-2">
+        <button onClick={onCancel} className="px-4 py-2 rounded-lg bg-slate-700 text-white">Cancel</button>
+        <button onClick={()=>onAdd(qty)} className="px-4 py-2 rounded-lg bg-emerald-600 text-white font-semibold">Add {qty}</button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Render ---------- */
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
 </body>
 </html>
