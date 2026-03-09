@@ -10,9 +10,12 @@
   <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.22.5/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3.2.0/dist/email.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
+  
     .fade-down {
       animation: fadeDown 0.5s ease-out forwards;
     }
@@ -267,25 +270,53 @@
       letter-spacing: 0.5rem;
       text-align: center;
     }
+	.message-banner {
+  background: #ffcc00;
+  color: black;
+  padding: 12px;
+  text-align: center;
+  font-weight: bold;
+}
   </style>
 </head>
+
 <body class="dark">
   <div id="root"></div>
   <script type="text/babel">
-    const products = [
-  "Coke gray", "Coke red", "Coke redder", "Fanta blue", "Fanta red",
-  "Fanta orange", "Fanta yellow", "Viminto purple", "Dr Pepper", "Pepsi black",
-  "Lemmon green", "Dog brown", "D&b purple", "Tango colour", "Tango purple",
+  const firebaseConfig = {
+  apiKey: "AIzaSyDq7t9Cai2p43Ei0hCwBr_R1VYaUzPNpVM",
+  authDomain: "vending-machine-app-2c983.firebaseapp.com",
+  projectId: "vending-machine-app-2c983",
+  storageBucket: "vending-machine-app-2c983.firebasestorage.app",
+  messagingSenderId: "28676700006",
+  appId: "1:28676700006:web:61b8aea738475d3b133aa7"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+
+const products = [
+  "Coke gray", "Coke red", "Coke redder", "Fanta blue",
+  "Fanta red", "Fanta orange", "Fanta yellow", "Viminto purple",
+  "Dr Pepper", "Pepsi black", "Lemmon green", "Dog brown",
+  "D&b purple", "Tango colour", "Tango purple",
   "Tango green", "Tango orange", "Iron bru", "Water",
   "Oasis yellow", "Oasis purple"
 ];
 
-    const App = () => {
-      const [restockList, setRestockList] = React.useState(() => {
-        const saved = localStorage.getItem('restockList');
-        return saved ? JSON.parse(saved) : [];
-      });
-      const [showPopup, setShowPopup] = React.useState(false);
+
+const App = () => {
+
+  const [restockList, setRestockList] = React.useState(() => {
+    const saved = localStorage.getItem('restockList');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+const [message, setMessage] = React.useState("");
+
+  const [showPopup, setShowPopup] = React.useState(false);
+	  
       const [currentProduct, setCurrentProduct] = React.useState(null);
       const [quantity, setQuantity] = React.useState(1);
       const [showResetConfirm, setShowResetConfirm] = React.useState(false);
@@ -324,7 +355,33 @@
       const [searchQuery, setSearchQuery] = React.useState('');
       const [showToast, setShowToast] = React.useState(false);
       const [lastAction, setLastAction] = React.useState(null);
-      const [bugReport, setBugReport] = React.useState('');
+const [bugReport, setBugReport] = React.useState('');
+
+// Notification system
+const [showNotificationPopup, setShowNotificationPopup] = React.useState(false);
+const [hasUnreadMessage, setHasUnreadMessage] = React.useState(false);
+	  
+	  React.useEffect(() => {
+  const unsubscribe = db.collection("messages")
+    .doc("banner")
+    .onSnapshot((doc) => {
+      if (doc.exists) {
+        const newMessage = doc.data().text;
+        setMessage(newMessage);
+        setHasUnreadMessage(true);
+      }
+    });
+
+  return () => unsubscribe();
+}, []);
+
+	  
+	  const sendMessage = (text) => {
+  db.collection("messages").add({
+    text: text,
+    time: firebase.firestore.FieldValue.serverTimestamp()
+  });
+};
 
       React.useEffect(() => {
         localStorage.setItem('restockList', JSON.stringify(restockList));
@@ -637,12 +694,30 @@
 
       return (
         <div className="app-container">
+		
           <header className="w-full max-w-[90vw] mx-auto mb-6">
             <div className="flex items-center justify-between mb-4">
               <h1 className={`text-[clamp(1.5rem,5vw,2rem)] font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Vending Machine Restock</h1>
               <div className="flex space-x-2">
-                <button
-                  onClick={toggleInfoPopup}
+
+  {/* Mailbox Notification Button */}
+  <button
+    onClick={() => {
+      setShowNotificationPopup(true);
+      setHasUnreadMessage(false);
+    }}
+    className="relative w-10 h-10 rounded-full bg-yellow-600 text-white flex items-center justify-center hover:bg-yellow-500 scale-transition"
+  >
+    <i className="fas fa-envelope"></i>
+
+    {hasUnreadMessage && (
+      <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full"></span>
+    )}
+  </button>
+
+  <button
+    onClick={toggleInfoPopup}
+
                   className="w-10 h-10 rounded-full bg-green-700 text-white flex items-center justify-center text-lg font-semibold hover:bg-green-600 scale-transition"
                   aria-label="Info"
                 >
@@ -1108,6 +1183,36 @@
               </div>
             </div>
           )}
+{showNotificationPopup && (
+  <div
+    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center fade-in"
+    onClick={() => setShowNotificationPopup(false)}
+  >
+    <div
+      className={`p-6 rounded-lg w-[90vw] max-w-md shadow-lg ${
+        isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-900'
+      }`}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <h3 className="text-lg font-bold mb-4">Notifications</h3>
+
+      {message ? (
+        <p className="mb-4">{message}</p>
+      ) : (
+        <p>No notifications.</p>
+      )}
+
+      <div className="flex justify-end">
+        <button
+          onClick={() => setShowNotificationPopup(false)}
+          className="px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-600"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
           {showInfoPopup && (
             <div
